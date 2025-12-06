@@ -26,30 +26,37 @@ class MenuBarController {
             action: #selector(toggleEnabled),
             keyEquivalent: ""
         )
+        enabledItem.target = self
         enabledItem.state = .on
         menu.addItem(enabledItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        menu.addItem(NSMenuItem(
+        let settingsItem = NSMenuItem(
             title: "Cài đặt...",
             action: #selector(openSettings),
             keyEquivalent: ","
-        ))
+        )
+        settingsItem.target = self
+        menu.addItem(settingsItem)
 
-        menu.addItem(NSMenuItem(
+        let aboutItem = NSMenuItem(
             title: "Về GoNhanh",
             action: #selector(showAbout),
             keyEquivalent: ""
-        ))
+        )
+        aboutItem.target = self
+        menu.addItem(aboutItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        menu.addItem(NSMenuItem(
+        let quitItem = NSMenuItem(
             title: "Thoát",
             action: #selector(quit),
             keyEquivalent: "q"
-        ))
+        )
+        quitItem.target = self
+        menu.addItem(quitItem)
 
         statusItem.menu = menu
     }
