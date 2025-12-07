@@ -299,13 +299,11 @@ private func keyboardCallback(
     if let (backspace, chars) = RustBridge.processKey(keyCode: keyCode, caps: caps, ctrl: ctrl) {
         debugLog("[KeyboardHook] Output: backspace=\(backspace), chars=\(chars)")
 
-        // Send backspaces
-        for _ in 0..<backspace {
-            sendBackspace(proxy: proxy)
-        }
-
-        // Send new characters
-        sendCharacters(chars, proxy: proxy)
+        // Use atomic text replacement to fix Chrome/Excel autocomplete issues
+        // Instead of backspace+type (which can cause "dính chữ"), we:
+        // 1. Select text with Shift+Left
+        // 2. Type replacement (automatically replaces selection)
+        sendTextReplacement(backspaceCount: backspace, chars: chars, proxy: proxy)
 
         // Consume original event
         return nil
@@ -317,6 +315,44 @@ private func keyboardCallback(
 
 // MARK: - Send Keys
 
+/// Atomic text replacement using selection + paste
+/// This fixes Chrome/Excel autocomplete issues where backspace+type causes "dính chữ"
+private func sendTextReplacement(backspaceCount: Int, chars: [Character], proxy: CGEventTapProxy) {
+    let source = CGEventSource(stateID: .privateState)
+
+    if backspaceCount > 0 {
+        // Method 1: Select text with Shift+Left, then type to replace
+        // This is atomic and works with autocomplete
+
+        // Send Shift+Left Arrow (backspaceCount times) to select text
+        for _ in 0..<backspaceCount {
+            // Left arrow keycode = 0x7B, with Shift modifier
+            if let down = CGEvent(keyboardEventSource: source, virtualKey: 0x7B, keyDown: true),
+               let up = CGEvent(keyboardEventSource: source, virtualKey: 0x7B, keyDown: false) {
+                down.flags = .maskShift
+                up.flags = .maskShift
+                down.post(tap: .cgSessionEventTap)
+                up.post(tap: .cgSessionEventTap)
+            }
+        }
+    }
+
+    // Now send the replacement characters (will replace selection or just insert)
+    let string = String(chars)
+    let utf16 = Array(string.utf16)
+
+    if let down = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+       let up = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) {
+
+        down.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+        up.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+
+        down.post(tap: .cgSessionEventTap)
+        up.post(tap: .cgSessionEventTap)
+    }
+}
+
+/// Legacy backspace method (kept for fallback)
 private func sendBackspace(proxy: CGEventTapProxy) {
     let source = CGEventSource(stateID: .privateState)
 
@@ -327,6 +363,7 @@ private func sendBackspace(proxy: CGEventTapProxy) {
     }
 }
 
+/// Legacy character send method (kept for fallback)
 private func sendCharacters(_ chars: [Character], proxy: CGEventTapProxy) {
     let source = CGEventSource(stateID: .privateState)
 
