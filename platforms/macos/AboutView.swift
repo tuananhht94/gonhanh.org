@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 // MARK: - About View (Apple HIG Compliant)
 
@@ -10,7 +9,7 @@ struct AboutView: View {
                 .frame(height: 8)
 
             // App Icon
-            Image(nsImage: NSApp.applicationIconImage)
+            Image(nsImage: AppMetadata.appIcon)
                 .resizable()
                 .frame(width: 80, height: 80)
 

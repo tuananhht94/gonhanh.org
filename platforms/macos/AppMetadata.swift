@@ -1,10 +1,16 @@
 import Foundation
+import AppKit
 
 // MARK: - App Metadata (Centralized)
 // All project metadata in one place for consistency
 
 enum AppMetadata {
     static let name = "GoNhanh"
+
+    // App Icon - centralized access
+    static var appIcon: NSImage {
+        NSApp.applicationIconImage ?? NSImage()
+    }
     static let displayName = "GoNhanh - Gõ Nhanh"
     static let tagline = "Bộ gõ tiếng Việt hiệu suất cao"
     static let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"

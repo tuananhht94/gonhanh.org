@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 // MARK: - Onboarding View
 
@@ -191,7 +190,7 @@ private struct WelcomePage: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(nsImage: NSApp.applicationIconImage)
+            Image(nsImage: AppMetadata.appIcon)
                 .resizable()
                 .frame(width: 80, height: 80)
 
