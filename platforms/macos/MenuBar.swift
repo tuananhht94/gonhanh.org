@@ -256,12 +256,17 @@ class MenuBarController {
         if onboardingWindow == nil {
             let view = OnboardingView()
             let controller = NSHostingController(rootView: view)
-            onboardingWindow = NSWindow(contentViewController: controller)
-            onboardingWindow?.title = AppMetadata.name
-            onboardingWindow?.styleMask = [.titled, .closable]
-            onboardingWindow?.setContentSize(controller.view.fittingSize)
-            onboardingWindow?.center()
+            let window = NSWindow(contentViewController: controller)
+            window.title = AppMetadata.name
+            window.styleMask = [.titled, .closable]
+            window.setContentSize(controller.view.fittingSize)
+            window.center()
+            window.isReleasedWhenClosed = false
+            onboardingWindow = window
         }
+
+        // Đảm bảo window hiện lên đúng cách cho menu bar app
+        NSApp.setActivationPolicy(.accessory)
         onboardingWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
