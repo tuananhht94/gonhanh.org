@@ -1,13 +1,38 @@
 import Cocoa
 import SwiftUI
 
+// MARK: - SwiftUI Toggle Wrapper
+
+class ToggleState: ObservableObject {
+    @Published var isOn: Bool
+    var onToggle: (() -> Void)?
+
+    init(isOn: Bool) {
+        self.isOn = isOn
+    }
+}
+
+struct ToggleWrapperView: View {
+    @ObservedObject var state: ToggleState
+
+    var body: some View {
+        Toggle("", isOn: $state.isOn)
+            .toggleStyle(.switch)
+            .tint(.green)
+            .onChange(of: state.isOn) { _ in
+                state.onToggle?()
+            }
+            .labelsHidden()
+    }
+}
+
 // MARK: - Menu Bar Controller
 
 class MenuBarController {
     private var statusItem: NSStatusItem!
     private var onboardingWindow: NSWindow?
     private var aboutWindow: NSWindow?
-    private var toggleSwitch: NSSwitch?
+    private var toggleState: ToggleState?
 
     private var isEnabled = true
     private var currentMethod: InputMode = .telex
@@ -150,19 +175,16 @@ class MenuBarController {
         name.frame = NSRect(x: 14, y: 10, width: 120, height: 16)
         view.addSubview(name)
 
-        // Toggle switch (reuse existing)
-        if toggleSwitch == nil {
-            let toggle = NSSwitch()
-            toggle.controlSize = .regular
-            toggle.target = self
-            toggle.action = #selector(toggleEnabled)
-            toggle.sizeToFit()
-            toggleSwitch = toggle
+        // Toggle using SwiftUI for custom tint color
+        if toggleState == nil {
+            toggleState = ToggleState(isOn: isEnabled)
+            toggleState?.onToggle = { [weak self] in self?.handleToggle() }
         }
-        toggleSwitch?.state = isEnabled ? .on : .off
-        toggleSwitch?.contentTintColor = .systemGreen
-        toggleSwitch?.frame.origin = NSPoint(x: 170, y: 6)
-        view.addSubview(toggleSwitch!)
+        toggleState?.isOn = isEnabled
+        let toggleView = ToggleWrapperView(state: toggleState!)
+        let hostingView = NSHostingView(rootView: toggleView)
+        hostingView.frame = NSRect(x: 162, y: 4, width: 50, height: 28)
+        view.addSubview(hostingView)
 
         return view
     }
@@ -176,8 +198,8 @@ class MenuBarController {
 
     // MARK: - Actions
 
-    @objc private func toggleEnabled() {
-        isEnabled.toggle()
+    private func handleToggle() {
+        isEnabled = toggleState?.isOn ?? !isEnabled
         UserDefaults.standard.set(isEnabled, forKey: SettingsKey.enabled)
         RustBridge.setEnabled(isEnabled)
         updateStatusButton()
