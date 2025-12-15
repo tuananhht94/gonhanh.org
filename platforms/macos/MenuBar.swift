@@ -8,130 +8,6 @@ extension Notification.Name {
     static let showSettingsPage = Notification.Name("showSettingsPage")
 }
 
-// MARK: - Menu Popover
-
-struct MenuPopoverView: View {
-    @ObservedObject var state: AppState
-    let onClose: () -> Void
-
-    @State private var shortcut = KeyboardShortcut.load()
-
-    var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider().padding(.horizontal, 8)
-            methodSection
-            Divider().padding(.horizontal, 8)
-            actionSection
-            Divider().padding(.horizontal, 8)
-            quitSection
-        }
-        .frame(width: 240)
-        .onReceive(NotificationCenter.default.publisher(for: .shortcutChanged)) { _ in
-            shortcut = KeyboardShortcut.load()
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 10) {
-            Image(nsImage: AppMetadata.logo)
-                .resizable()
-                .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(AppMetadata.name)
-                    .font(.system(size: 13, weight: .semibold))
-                HStack(spacing: 4) {
-                    Text(state.isEnabled ? state.currentMethod.name : "Đã tắt")
-                    Text("·").foregroundColor(Color(NSColor.tertiaryLabelColor))
-                    Text(shortcut.displayParts.joined()).foregroundColor(Color(NSColor.tertiaryLabelColor))
-                }
-                .font(.system(size: 11))
-                .foregroundColor(Color(NSColor.secondaryLabelColor))
-            }
-
-            Spacer()
-
-            Toggle("", isOn: Binding(get: { state.isEnabled }, set: { _ in state.toggle() }))
-                .toggleStyle(.switch)
-                .labelsHidden()
-                .scaleEffect(0.8)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-    }
-
-    private var methodSection: some View {
-        VStack(spacing: 0) {
-            MenuItem(title: InputMode.telex.name, isChecked: state.currentMethod == .telex) {
-                state.setMethod(.telex)
-            }
-            MenuItem(title: InputMode.vni.name, isChecked: state.currentMethod == .vni) {
-                state.setMethod(.vni)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var actionSection: some View {
-        VStack(spacing: 0) {
-            MenuItem(title: "Cài đặt...") {
-                onClose()
-                NotificationCenter.default.post(name: .showSettingsPage, object: NavigationPage.settings)
-            }
-            MenuItem(title: "Giới thiệu") {
-                onClose()
-                NotificationCenter.default.post(name: .showSettingsPage, object: NavigationPage.about)
-            }
-            MenuItem(title: "Kiểm tra cập nhật") {
-                onClose()
-                NotificationCenter.default.post(name: .showUpdateWindow, object: nil)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var quitSection: some View {
-        MenuItem(title: "Thoát \(AppMetadata.name)") {
-            NSApp.terminate(nil)
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Menu Item
-
-struct MenuItem: View {
-    let title: String
-    var isChecked: Bool = false
-    let action: () -> Void
-
-    @State private var hovered = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 0) {
-                Text(isChecked ? "✓" : "")
-                    .font(.system(size: 13))
-                    .frame(width: 20, alignment: .center)
-                Text(title)
-                    .font(.system(size: 13))
-                Spacer()
-            }
-            .foregroundColor(hovered ? .white : Color(NSColor.labelColor))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 4).fill(hovered ? Color.accentColor : Color.clear))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 6)
-        .onHover { hovered = $0 }
-    }
-}
-
-
 // MARK: - Menu Bar Controller
 
 class MenuBarController: NSObject, NSWindowDelegate {
@@ -311,26 +187,14 @@ class MenuBarController: NSObject, NSWindowDelegate {
         RustBridge.setEnabled(appState.isEnabled)
         RustBridge.setMethod(appState.currentMethod.rawValue)
 
-        // Sync shortcuts and excluded apps from AppState
-        syncShortcutsToEngine()
-        syncExcludedAppsToEngine()
+        // Sync shortcuts and excluded apps (use AppState's centralized methods)
+        appState.syncShortcutsToEngine()
+        appState.syncExcludedAppsToEngine()
         ExcludedAppsManager.shared.start()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             UpdateManager.shared.checkForUpdatesSilently()
         }
-    }
-
-    private func syncShortcutsToEngine() {
-        let shortcuts = AppState.shared.shortcuts.map { ($0.key, $0.value, $0.isEnabled) }
-        RustBridge.syncShortcuts(shortcuts)
-    }
-
-    private func syncExcludedAppsToEngine() {
-        let bundleIds = AppState.shared.excludedApps
-            .filter { $0.isEnabled }
-            .map { $0.bundleId }
-        ExcludedAppsManager.shared.setExcludedApps(bundleIds)
     }
 
     // MARK: - Status Button

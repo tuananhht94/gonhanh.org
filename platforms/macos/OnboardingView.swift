@@ -88,7 +88,8 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        UserDefaults.standard.set(selectedMode.rawValue, forKey: SettingsKey.method)
+        // Use AppState for method (syncs to UserDefaults + RustBridge automatically)
+        AppState.shared.setMethod(selectedMode)
         UserDefaults.standard.set(true, forKey: SettingsKey.hasCompletedOnboarding)
         NotificationCenter.default.post(name: .onboardingCompleted, object: nil)
         NSApp.keyWindow?.close()
