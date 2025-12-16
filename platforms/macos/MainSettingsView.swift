@@ -86,16 +86,17 @@ class AppState: ObservableObject {
     @Published var excludedApps: [ExcludedApp] = []
 
     // Dev apps that typically don't need Vietnamese input
-    private static let defaultExcludedApps: [(bundleId: String, name: String, path: String)] = [
-        ("com.googlecode.iterm2", "iTerm", "/Applications/iTerm.app"),
-        ("com.microsoft.VSCode", "Visual Studio Code", "/Applications/Visual Studio Code.app"),
-        ("com.tinyapp.TablePlus", "TablePlus", "/Applications/TablePlus.app"),
-        ("com.jetbrains.datagrip", "DataGrip", "/Applications/DataGrip.app"),
-        ("com.apple.dt.Xcode", "Xcode", "/Applications/Xcode.app"),
-        ("com.sequel-ace.sequel-ace", "Sequel Ace", "/Applications/Sequel Ace.app"),
-        ("com.postmanlabs.mac", "Postman", "/Applications/Postman.app"),
-        ("com.apple.Terminal", "Terminal", "/System/Applications/Utilities/Terminal.app"),
-        ("com.termius-dmg.mac", "Termius", "/Applications/Termius.app"),
+    // enabledByDefault: false = app appears in list but toggle is OFF (user must enable manually)
+    private static let defaultExcludedApps: [(bundleId: String, name: String, path: String, enabledByDefault: Bool)] = [
+        ("com.googlecode.iterm2", "iTerm", "/Applications/iTerm.app", true),
+        ("com.microsoft.VSCode", "Visual Studio Code", "/Applications/Visual Studio Code.app", true),
+        ("com.tinyapp.TablePlus", "TablePlus", "/Applications/TablePlus.app", true),
+        ("com.jetbrains.datagrip", "DataGrip", "/Applications/DataGrip.app", true),
+        ("com.apple.dt.Xcode", "Xcode", "/Applications/Xcode.app", true),
+        ("com.sequel-ace.sequel-ace", "Sequel Ace", "/Applications/Sequel Ace.app", true),
+        ("com.postmanlabs.mac", "Postman", "/Applications/Postman.app", true),
+        ("com.apple.Terminal", "Terminal", "/System/Applications/Utilities/Terminal.app", false),
+        ("com.termius-dmg.mac", "Termius", "/Applications/Termius.app", false),
     ]
 
     init() {
@@ -115,7 +116,8 @@ class AppState: ObservableObject {
             return ExcludedApp(
                 bundleId: app.bundleId,
                 name: app.name,
-                icon: NSWorkspace.shared.icon(forFile: app.path)
+                icon: NSWorkspace.shared.icon(forFile: app.path),
+                isEnabled: app.enabledByDefault
             )
         }
     }
