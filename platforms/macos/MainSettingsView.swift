@@ -205,9 +205,11 @@ class AppState: ObservableObject {
     private func setupLaunchAtLoginMonitoring() {
         isLaunchAtLoginEnabled = LaunchAtLoginManager.shared.isEnabled
 
-        // Auto-enable launch at login if not already enabled
-        if !isLaunchAtLoginEnabled {
+        // Only auto-enable on first launch (when user hasn't configured yet)
+        let hasConfigured = UserDefaults.standard.bool(forKey: SettingsKey.launchAtLoginConfigured)
+        if !hasConfigured && !isLaunchAtLoginEnabled {
             autoEnableLaunchAtLogin()
+            UserDefaults.standard.set(true, forKey: SettingsKey.launchAtLoginConfigured)
         }
 
         launchAtLoginTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
@@ -241,6 +243,24 @@ class AppState: ObservableObject {
         } catch {
             requiresManualLaunchAtLogin = true
             openLoginItemsSettings()
+        }
+    }
+
+    func disableLaunchAtLogin() {
+        do {
+            try LaunchAtLoginManager.shared.disable()
+            refreshLaunchAtLoginStatus()
+        } catch {
+            // If disable fails, open settings for manual action
+            openLoginItemsSettings()
+        }
+    }
+
+    func toggleLaunchAtLogin(_ enabled: Bool) {
+        if enabled {
+            enableLaunchAtLogin()
+        } else {
+            disableLaunchAtLogin()
         }
     }
 
@@ -622,11 +642,6 @@ struct SettingsPageView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Launch at Login warning (only show if auto-enable failed)
-            if appState.requiresManualLaunchAtLogin {
-                LaunchAtLoginBanner { appState.enableLaunchAtLogin() }
-            }
-
             // Input method settings
             VStack(spacing: 0) {
                 SettingsToggleRow("Bộ gõ tiếng Việt", isOn: $appState.isEnabled)
@@ -650,6 +665,8 @@ struct SettingsPageView: View {
 
             // Other options
             VStack(spacing: 0) {
+                LaunchAtLoginToggleRow(appState: appState)
+                Divider().padding(.leading, 12)
                 SettingsToggleRow("Chuyển chế độ thông minh",
                                   subtitle: "Tự động nhớ trạng thái Anh/Việt cho từng ứng dụng",
                                   isOn: $appState.isSmartModeEnabled)
@@ -1085,29 +1102,28 @@ struct ShortcutRecorderRow: View {
     }
 }
 
-// MARK: - Launch at Login Banner
+// MARK: - Launch at Login Toggle Row
 
-struct LaunchAtLoginBanner: View {
-    let onOpenSettings: () -> Void
-    @State private var hovered = false
+struct LaunchAtLoginToggleRow: View {
+    @ObservedObject var appState: AppState
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 14)).foregroundColor(.orange)
+        SettingsRow {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Chưa bật khởi động cùng hệ thống").font(.system(size: 12, weight: .medium))
-                Text("Nhấn để bật").font(.system(size: 11)).foregroundColor(Color(NSColor.secondaryLabelColor))
+                Text("Khởi động cùng hệ thống")
+                    .font(.system(size: 13))
+                Text("Tự động chạy ứng dụng khi đăng nhập")
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(NSColor.secondaryLabelColor))
             }
             Spacer()
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium)).foregroundColor(Color(NSColor.tertiaryLabelColor))
+            Toggle("", isOn: Binding(
+                get: { appState.isLaunchAtLoginEnabled },
+                set: { appState.toggleLaunchAtLogin($0) }
+            ))
+            .toggleStyle(.switch)
+            .labelsHidden()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.orange.opacity(hovered ? 0.15 : 0.1)))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.3), lineWidth: 0.5))
-        .contentShape(Rectangle())
-        .onHover { h in hovered = h; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
-        .onTapGesture { onOpenSettings() }
     }
 }
 

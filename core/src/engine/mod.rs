@@ -455,7 +455,7 @@ impl Engine {
         }
 
         // Revert short-pattern stroke when new letter creates invalid Vietnamese
-        // This handles: "ded" → "đe" (stroke applied), then 'e' → "dede" (invalid, revert)
+        // This handles: "ded" → "đe" (stroke applied), then 'i' → "dedi" (invalid, revert)
         // IMPORTANT: This check must happen BEFORE any modifiers (tone, mark, etc.)
         // because the modifier key (like 'e' for circumflex) would transform the
         // buffer before we can check validity.
@@ -465,11 +465,20 @@ impl Engine {
         // - raw_input = [d, e, d, e] with new 'e' (4 chars - the actual full input)
         // Checking [D, E, D, E] correctly identifies "dede" as invalid.
         //
-        // Skip revert for mark keys (s, f, r, x, j) since they confirm Vietnamese intent.
+        // Skip revert for:
+        // - Mark keys (s, f, r, x, j) - confirm Vietnamese intent
+        // - Tone keys (a, e, o, w) that can apply to buffer - allows fast typing
+        //   e.g., "dod" → "đo" + 'o' → "đô" (user typed d-o-d-o fast, intended "ddoo")
+        // - Stroke keys ('d') - handled separately in try_stroke for proper revert behavior
+        //   e.g., "dadd" → "dad" (d reverts stroke and adds itself, not "dadd")
         let is_mark_key = m.mark(key).is_some();
+        let is_tone_key = m.tone(key).is_some();
+        let is_stroke_key = m.stroke(key);
 
         if keys::is_letter(key)
             && !is_mark_key
+            && !is_tone_key
+            && !is_stroke_key
             && matches!(self.last_transform, Some(Transform::ShortPatternStroke))
         {
             // Build buffer_keys from raw_input (which already includes current key)
@@ -665,6 +674,29 @@ impl Engine {
         // If last transform was stroke and same key pressed again, revert the stroke
         if let Some(Transform::Stroke(last_key)) = self.last_transform {
             if last_key == key {
+                // Find the stroked 'd' to revert
+                if let Some(pos) = self.buf.iter().position(|c| c.key == keys::D && c.stroke) {
+                    // Revert: un-stroke the 'd'
+                    if let Some(c) = self.buf.get_mut(pos) {
+                        c.stroke = false;
+                    }
+                    // Add another 'd' as normal char
+                    self.buf.push(Char::new(key, false));
+                    self.last_transform = None;
+                    // Mark that stroke was reverted - subsequent 'd' keys will be normal letters
+                    self.stroke_reverted = true;
+                    // Use rebuild_from_after_insert because the new 'd' was just pushed
+                    // and hasn't been displayed on screen yet
+                    return Some(self.rebuild_from_after_insert(pos));
+                }
+            }
+        }
+
+        // Check for short-pattern stroke revert: dadd → dad
+        // If last transform was short-pattern stroke and 'd' is pressed again, revert the stroke
+        // This is similar to the ddd → dd revert above, but for delayed stroke patterns
+        if let Some(Transform::ShortPatternStroke) = self.last_transform {
+            if key == keys::D {
                 // Find the stroked 'd' to revert
                 if let Some(pos) = self.buf.iter().position(|c| c.key == keys::D && c.stroke) {
                     // Revert: un-stroke the 'd'
@@ -1149,42 +1181,10 @@ impl Engine {
                 return None;
             }
 
-            // Issue #44 (part 2): Breve in open syllable is also invalid
-            // "raw" → should stay "raw", not "ră"
-            // "trawm" → should become "trăm" (breve valid when final consonant present)
-            // "osaw" → should become "oắ" (mark on 'a' confirms Vietnamese, don't defer)
-            // "uafw" → should become "uằ" (mark on any vowel confirms Vietnamese)
-            // Defer breve only when: no final consonant AND no mark on any vowel
-            //
-            // Check if ANY vowel has a mark (confirms Vietnamese input regardless of position)
-            let any_vowel_has_mark = self.buf.iter().any(|c| c.mark > 0 && keys::is_vowel(c.key));
-
-            let has_breve_open_syllable = target_positions.iter().any(|&pos| {
-                if let Some(c) = self.buf.get(pos) {
-                    if c.key == keys::A {
-                        // If any vowel has a mark, it confirms Vietnamese - don't defer
-                        if any_vowel_has_mark {
-                            return false;
-                        }
-                        // Check if there's a valid final consonant after 'a'
-                        // Valid finals: c, m, n, p, t, ch, ng, nh
-                        let has_valid_final = (pos + 1..self.buf.len()).any(|i| {
-                            if let Some(next) = self.buf.get(i) {
-                                // Single final consonants
-                                if matches!(
-                                    next.key,
-                                    keys::C | keys::M | keys::N | keys::P | keys::T
-                                ) {
-                                    return true;
-                                }
-                            }
-                            false
-                        });
-                        return !has_valid_final;
-                    }
-                }
-                false
-            });
+            // Issue #44 (part 2): Always apply breve for "aw" pattern immediately
+            // "aw" → "ă", "taw" → "tă", "raw" → "ră"
+            // The breve is always applied - English auto-restore handles English words separately
+            let has_breve_open_syllable = false;
 
             if has_breve_open_syllable {
                 // Revert: clear applied tones, defer breve until final consonant
@@ -2425,22 +2425,12 @@ impl Engine {
                     if has_initial_consonant {
                         let (prev_vowel, _, _) = self.raw_input[i - 1];
                         // Vietnamese exceptions: diphthongs with tone modifier in middle
-                        // Also include Telex circumflex patterns: AA→Â, EE→Ê, OO→Ô
-                        // e.g., "loxoi" = l + o + x(hỏi) + o(circumflex) + i = lỗi
-                        // e.g., "soso" = s + o + s(sắc) + o(circumflex) = số
                         let is_vietnamese_pattern = match prev_vowel {
                             k if k == keys::U => next_key == keys::A || next_key == keys::O,
                             k if k == keys::A => {
-                                next_key == keys::I
-                                    || next_key == keys::Y
-                                    || next_key == keys::O
-                                    || next_key == keys::A // AA → Â (circumflex)
+                                next_key == keys::I || next_key == keys::Y || next_key == keys::O
                             }
-                            k if k == keys::E => next_key == keys::E, // EE → Ê (circumflex)
-                            k if k == keys::O => {
-                                next_key == keys::I || next_key == keys::A || next_key == keys::O
-                                // OO → Ô (circumflex)
-                            }
+                            k if k == keys::O => next_key == keys::I || next_key == keys::A,
                             _ => false,
                         };
                         if !is_vietnamese_pattern {
@@ -2578,7 +2568,7 @@ mod tests {
         ("aj", "ạ"),
         ("aa", "â"),
         // Issue #44: Breve deferred in open syllable until final consonant or mark
-        ("aw", "aw"),  // stays "aw" (no final)
+        ("aw", "ă"),   // standalone aw → ă
         ("awm", "ăm"), // breve applied when final consonant typed
         ("aws", "ắ"),  // breve applied when mark typed
         ("ee", "ê"),
@@ -2598,7 +2588,7 @@ mod tests {
         ("a5", "ạ"),
         ("a6", "â"),
         // Issue #44: Breve deferred in open syllable until final consonant or mark
-        ("a8", "a8"),  // stays "a8" (no final)
+        ("a8", "ă"),   // standalone a8 → ă
         ("a8m", "ăm"), // breve applied when final consonant typed
         ("a81", "ắ"),  // breve applied when mark typed
         ("e6", "ê"),
