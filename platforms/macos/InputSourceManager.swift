@@ -80,7 +80,7 @@ final class InputSourceObserver {
 
         if isAllowedInputSource {
             // Restore user preference
-            let userEnabled = UserDefaults.standard.object(forKey: "gonhanh.enabled") as? Bool ?? true
+            let userEnabled = UserDefaults.standard.bool(forKey: SettingsKey.enabled)
             RustBridge.setEnabled(userEnabled)
         } else {
             // Force disable
@@ -115,7 +115,7 @@ final class InputSourceObserver {
             case "bn": return "অ"  // Bengali/Bangla
             case "ta": return "அ"  // Tamil
             // Other common
-            case "vi": return "V"
+            case "vi": return "E"  // Vietnamese input source = Gõ Nhanh disabled
             case "ru": return "Р"
             case "ar": return "ع"
             case "he": return "א"

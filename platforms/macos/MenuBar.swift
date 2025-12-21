@@ -5,7 +5,6 @@ import Combine
 // MARK: - Notifications
 
 extension Notification.Name {
-    static let menuStateChanged = Notification.Name("menuStateChanged")
     static let showSettingsPage = Notification.Name("showSettingsPage")
 }
 
@@ -69,13 +68,6 @@ class MenuBarController: NSObject, NSWindowDelegate {
 
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleMenuStateChanged),
-            name: .menuStateChanged,
-            object: nil
-        )
-
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(handleInputSourceChanged),
             name: .inputSourceChanged,
             object: nil
@@ -88,6 +80,13 @@ class MenuBarController: NSObject, NSWindowDelegate {
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShortcutChanged),
+            name: .shortcutChanged,
+            object: nil
+        )
+
         // Observe UpdateManager state changes to update menu
         updateStateObserver = NotificationCenter.default.addObserver(
             forName: .updateStateChanged,
@@ -97,10 +96,11 @@ class MenuBarController: NSObject, NSWindowDelegate {
             self?.updateMenu()
         }
 
-        // Observe AppState.isEnabled changes via Combine for app switch updates
+        // Observe AppState changes via Combine
         appState.$isEnabled
+            .combineLatest(appState.$currentMethod)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
+            .sink { [weak self] _, _ in
                 self?.updateStatusButton()
                 self?.updateMenu()
             }
@@ -173,9 +173,8 @@ class MenuBarController: NSObject, NSWindowDelegate {
         nameLabel.frame = NSRect(x: 48, y: 16, width: 100, height: 16)
         view.addSubview(nameLabel)
 
-        let shortcut = KeyboardShortcut.load()
         let statusText = appState.isEnabled ? appState.currentMethod.name : "Đã tắt"
-        let statusLabel = NSTextField(labelWithString: "\(statusText) · \(shortcut.displayParts.joined())")
+        let statusLabel = NSTextField(labelWithString: "\(statusText) · \(appState.toggleShortcut.displayParts.joined())")
         statusLabel.font = .systemFont(ofSize: 11)
         statusLabel.textColor = .secondaryLabelColor
         statusLabel.frame = NSRect(x: 48, y: 2, width: 100, height: 14)
@@ -186,7 +185,10 @@ class MenuBarController: NSObject, NSWindowDelegate {
         let toggleView = NSHostingView(rootView:
             Toggle("", isOn: Binding(
                 get: { [weak self] in self?.appState.isEnabled ?? true },
-                set: { [weak self] _ in self?.appState.toggle() }
+                set: { [weak self] newValue in
+                    self?.appState.isEnabled = newValue
+                    SoundManager.shared.playToggleSound(enabled: newValue)
+                }
             ))
             .toggleStyle(.switch)
             .labelsHidden()
@@ -352,13 +354,12 @@ class MenuBarController: NSObject, NSWindowDelegate {
         SoundManager.shared.playToggleSound(enabled: appState.isEnabled)
     }
 
-    @objc private func handleMenuStateChanged() {
+    @objc private func handleInputSourceChanged() {
         updateStatusButton()
         updateMenu()
     }
 
-    @objc private func handleInputSourceChanged() {
-        updateStatusButton()
+    @objc private func handleShortcutChanged() {
         updateMenu()
     }
 
