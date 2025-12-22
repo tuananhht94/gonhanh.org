@@ -927,6 +927,22 @@ private func keyboardCallback(
     // Detect injection method once per keystroke (expensive AX query)
     let (method, delays) = detectMethod()
 
+    // Arrow keys with any modifier (Cmd/Option/Shift) that moves cursor - clear buffer
+    // Cmd+Arrow: move by line, Option+Arrow: move by word, Shift+: select
+    // All of these invalidate the current composition context
+    let arrowKeys: Set<UInt16> = [
+        UInt16(KeyCode.leftArrow),   // 0x7B
+        UInt16(KeyCode.rightArrow),  // 0x7C
+        UInt16(KeyCode.upArrow),     // 0x7E
+        UInt16(KeyCode.downArrow),   // 0x7D
+    ]
+    let hasModifier = flags.contains(.maskCommand) || flags.contains(.maskAlternate) || flags.contains(.maskShift)
+    if arrowKeys.contains(keyCode) && hasModifier {
+        RustBridge.clearBuffer()
+        TextInjector.shared.clearSessionBuffer()
+        return Unmanaged.passUnretained(event)
+    }
+
     // Pass through all Cmd+key shortcuts (Cmd+A, Cmd+C, Cmd+V, Cmd+X, Cmd+Z, etc.)
     // For selectAll method: sync session buffer after text-modifying shortcuts
     if flags.contains(.maskCommand) && !flags.contains(.maskControl) && !flags.contains(.maskAlternate) {
