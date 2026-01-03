@@ -423,19 +423,44 @@ private class TextInjector {
 // MARK: - FFI (Rust Bridge)
 
 /// FFI result struct - must match Rust `Result` struct layout exactly
-/// Size: 64 UInt32 chars (256 bytes) + 4 bytes = 260 bytes
-/// Max replacement: 63 UTF-32 codepoints (Vietnamese diacritics = 1 each)
+/// Size: 256 UInt32 chars (1024 bytes) + 4 bytes = 1028 bytes
+/// Max replacement: 255 UTF-32 codepoints (Vietnamese diacritics = 1 each)
 private struct ImeResult {
-    // 64 UInt32 values for UTF-32 codepoints (matches core/src/engine/buffer.rs MAX)
+    // 256 UInt32 values for UTF-32 codepoints (matches core/src/engine/buffer.rs MAX)
+    // 32 lines × 8 values = 256 total
     var chars: (
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,
-        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 1
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 2
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 3
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 4
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 5
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 6
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 7
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 8
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 9
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 10
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 11
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 12
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 13
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 14
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 15
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 16
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 17
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 18
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 19
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 20
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 21
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 22
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 23
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 24
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 25
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 26
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 27
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 28
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 29
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 30
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32,  // 31
+        UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32   // 32
     )
     var action: UInt8
     var backspace: UInt8
@@ -491,7 +516,7 @@ class RustBridge {
         guard r.action == 1 else { return nil }
 
         let chars = withUnsafePointer(to: r.chars) { p in
-            p.withMemoryRebound(to: UInt32.self, capacity: 64) { bound in
+            p.withMemoryRebound(to: UInt32.self, capacity: 256) { bound in
                 (0..<Int(r.count)).compactMap { Unicode.Scalar(bound[$0]).map(Character.init) }
             }
         }
@@ -556,8 +581,8 @@ class RustBridge {
 
     /// Get full composed buffer as string (for Select All injection method)
     static func getFullBuffer() -> String {
-        var buffer = [UInt32](repeating: 0, count: 64)
-        let len = ime_get_buffer(&buffer, 64)
+        var buffer = [UInt32](repeating: 0, count: 256)
+        let len = ime_get_buffer(&buffer, 256)
         guard len > 0 else { return "" }
         return String(buffer[0..<len].compactMap { Unicode.Scalar($0).map(Character.init) })
     }
