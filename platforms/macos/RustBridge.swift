@@ -329,14 +329,29 @@ private class TextInjector {
 
         // Handle autocomplete: when selection > 0, text after cursor is autocomplete suggestion
         // Example: "a|rc://chrome-urls" where "|" is cursor, "rc://..." is selected suggestion
-        let userText = (selection > 0 && cursor <= fullText.count)
-            ? String(fullText.prefix(cursor))
-            : fullText
+        // NOTE: AX API returns UTF-16 offsets, so we must use utf16 view for all position calculations
+        let utf16View = fullText.utf16
+        let cursorUTF16 = min(cursor, utf16View.count)
+
+        let userText: String
+        if selection > 0 && cursorUTF16 <= utf16View.count {
+            let endIdx = utf16View.index(utf16View.startIndex, offsetBy: cursorUTF16)
+            userText = String(fullText[..<endIdx])
+        } else {
+            userText = fullText
+        }
 
         // Calculate replacement: delete `bs` chars before cursor, insert `text`
-        let deleteStart = max(0, cursor - bs)
-        let prefix = String(userText.prefix(deleteStart))
-        let suffix = String(userText.dropFirst(cursor))
+        // IMPORTANT: cursor and bs are UTF-16 offsets, not grapheme cluster counts
+        let userUTF16 = userText.utf16
+        let deleteStartUTF16 = max(0, cursorUTF16 - bs)
+
+        // Convert UTF-16 offsets to String.Index
+        let prefixEndIdx = userUTF16.index(userUTF16.startIndex, offsetBy: min(deleteStartUTF16, userUTF16.count))
+        let suffixStartIdx = userUTF16.index(userUTF16.startIndex, offsetBy: min(cursorUTF16, userUTF16.count))
+
+        let prefix = String(userText[..<prefixEndIdx])
+        let suffix = String(userText[suffixStartIdx...])
         let newText = (prefix + text + suffix).precomposedStringWithCanonicalMapping
 
         // Write new value
@@ -345,8 +360,8 @@ private class TextInjector {
             return false
         }
 
-        // Update cursor to end of inserted text
-        var newCursor = CFRange(location: deleteStart + text.count, length: 0)
+        // Update cursor to end of inserted text (use UTF-16 offset)
+        var newCursor = CFRange(location: deleteStartUTF16 + text.utf16.count, length: 0)
         if let newRange = AXValueCreate(.cfRange, &newCursor) {
             AXUIElementSetAttributeValue(axEl, kAXSelectedTextRangeAttribute as CFString, newRange)
         }
