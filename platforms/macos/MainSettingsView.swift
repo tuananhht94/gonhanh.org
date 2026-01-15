@@ -1192,8 +1192,11 @@ struct RestoreShortcutRecorderRow: View {
         .padding(.vertical, 10)
         .background((hovered || isRecording) ? Color(NSColor.controlBackgroundColor).opacity(0.3) : .clear)
         .contentShape(Rectangle())
-        .onHover { hovered = $0 }
-        .onTapGesture { isRecording ? stopRecording() : startRecording() }
+        .onHover { hovered = isEnabled && $0 }  // Only hover effect when enabled
+        .onTapGesture {
+            guard isEnabled else { return }  // Disable click when OFF
+            isRecording ? stopRecording() : startRecording()
+        }
         .onDisappear { stopRecording() }
         .onChange(of: isEnabled) { _ in
             if isRecording { stopRecording() }
