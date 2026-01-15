@@ -105,10 +105,10 @@ class AppState: ObservableObject {
         }
     }
 
-    @Published var escRestore: Bool = false {
+    @Published var restoreShortcutEnabled: Bool = false {
         didSet {
-            UserDefaults.standard.set(escRestore, forKey: SettingsKey.escRestore)
-            RustBridge.setEscRestore(escRestore)
+            UserDefaults.standard.set(restoreShortcutEnabled, forKey: SettingsKey.restoreShortcutEnabled)
+            RustBridge.setRestoreShortcutEnabled(restoreShortcutEnabled)
         }
     }
 
@@ -173,7 +173,7 @@ class AppState: ObservableObject {
         perAppModeEnabled = defaults.bool(forKey: SettingsKey.perAppMode)
         autoWShortcut = defaults.bool(forKey: SettingsKey.autoWShortcut)
         bracketShortcut = defaults.bool(forKey: SettingsKey.bracketShortcut)
-        escRestore = defaults.bool(forKey: SettingsKey.escRestore)
+        restoreShortcutEnabled = defaults.bool(forKey: SettingsKey.restoreShortcutEnabled)
         modernTone = defaults.bool(forKey: SettingsKey.modernTone)
         englishAutoRestore = defaults.bool(forKey: SettingsKey.englishAutoRestore)
         autoCapitalize = defaults.bool(forKey: SettingsKey.autoCapitalize)
@@ -196,7 +196,7 @@ class AppState: ObservableObject {
         RustBridge.setMethod(currentMethod.rawValue)
         RustBridge.setSkipWShortcut(!autoWShortcut)
         RustBridge.setBracketShortcut(bracketShortcut)
-        RustBridge.setEscRestore(escRestore)
+        RustBridge.setRestoreShortcutEnabled(restoreShortcutEnabled)
         RustBridge.setModernTone(modernTone)
         RustBridge.setEnglishAutoRestore(englishAutoRestore)
         RustBridge.setAutoCapitalize(autoCapitalize)
@@ -742,7 +742,7 @@ struct SettingsPageView: View {
                 Divider().padding(.leading, 12)
                 RestoreShortcutRecorderRow(
                     shortcut: $appState.restoreShortcut,
-                    isEnabled: $appState.escRestore,
+                    isEnabled: $appState.restoreShortcutEnabled,
                     isRecording: $isRecordingRestoreShortcut
                 )
             }

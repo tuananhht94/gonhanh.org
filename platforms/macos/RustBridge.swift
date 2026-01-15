@@ -564,11 +564,11 @@ class RustBridge {
         Log.info("Bracket shortcut: \(enabled)")
     }
 
-    /// Set whether ESC key restores raw ASCII input
+    /// Set whether restore shortcut is enabled
     /// NOTE: Enable in Rust engine so we can get restore data, but Swift controls when to trigger
-    static func setEscRestore(_ enabled: Bool) {
+    static func setRestoreShortcutEnabled(_ enabled: Bool) {
         ime_esc_restore(enabled)
-        Log.info("ESC restore: \(enabled)")
+        Log.info("Restore shortcut enabled: \(enabled)")
     }
 
     /// Set whether to enable free tone placement (skip validation)
@@ -939,6 +939,20 @@ private func matchesModifierOnlyShortcut(flags: CGEventFlags) -> Bool {
     return currentShortcut.matchesModifierOnly(flags: flags)
 }
 
+/// Trigger restore shortcut - restore raw ASCII and clear buffer
+private func triggerRestoreShortcut(flags: CGEventFlags, proxy: CGEventTapProxy) {
+    let shift = flags.contains(.maskShift)
+    let caps = shift || flags.contains(.maskAlphaShift)
+    let ctrl = flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate)
+    let (method, delays) = detectMethod()
+    if let (bs, chars, _) = RustBridge.processKey(keyCode: UInt16(KeyCode.esc), caps: caps, ctrl: ctrl, shift: shift) {
+        Log.info("Restore shortcut: backspace \(bs), chars '\(String(chars))'")
+        sendReplacement(backspace: bs, chars: chars, method: method, delays: delays, proxy: proxy)
+    }
+    TextInjector.shared.clearSessionBuffer()
+    RustBridge.clearBuffer()
+}
+
 private func keyboardCallback(
     proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?
 ) -> Unmanaged<CGEvent>? {
@@ -1038,23 +1052,12 @@ private func keyboardCallback(
         wasControlPressed = isControlNowPressed
 
         // Handle modifier-only restore shortcut (e.g., Ctrl alone, Shift alone)
-        // Only if escRestore is enabled
-        if AppState.shared.escRestore && currentRestoreShortcut.isModifierOnly {
+        if AppState.shared.restoreShortcutEnabled && currentRestoreShortcut.isModifierOnly {
             if currentRestoreShortcut.matchesModifierOnly(flags: flags) {
                 wasRestoreModifierPressed = true
             } else if wasRestoreModifierPressed {
-                // Modifier was pressed and now released - trigger restore
                 wasRestoreModifierPressed = false
-                let shift = flags.contains(.maskShift)
-                let caps = shift || flags.contains(.maskAlphaShift)
-                let ctrl = flags.contains(.maskCommand) || flags.contains(.maskControl) || flags.contains(.maskAlternate)
-                let (method, delays) = detectMethod()
-                if let (bs, chars, _) = RustBridge.processKey(keyCode: UInt16(KeyCode.esc), caps: caps, ctrl: ctrl, shift: shift) {
-                    Log.info("Restore shortcut (modifier): backspace \(bs), chars '\(String(chars))'")
-                    sendReplacement(backspace: bs, chars: chars, method: method, delays: delays, proxy: proxy)
-                }
-                TextInjector.shared.clearSessionBuffer()
-                RustBridge.clearBuffer()
+                triggerRestoreShortcut(flags: flags, proxy: proxy)
             }
         }
 
@@ -1112,22 +1115,9 @@ private func keyboardCallback(
         TextInjector.shared.clearSessionBuffer()
         return Unmanaged.passUnretained(event)
     }
-    // Issue #149: Restore shortcut - restore raw ASCII if enabled, then clear buffer
-    // Must call engine FIRST to get restore result before clearing
-    // Uses configurable shortcut (default: ESC) instead of hardcoded key
-    // Only trigger if escRestore is enabled
-    if AppState.shared.escRestore && matchesRestoreShortcut(keyCode: keyCode, flags: flags) {
-        // Detect injection method once per keystroke (expensive AX query)
-        let (method, delays) = detectMethod()
-
-        // Try to get restore result from engine (pass ESC keycode for restore logic)
-        if let (bs, chars, _) = RustBridge.processKey(keyCode: UInt16(KeyCode.esc), caps: caps, ctrl: ctrl, shift: shift) {
-            Log.info("Restore shortcut: backspace \(bs), chars '\(String(chars))'")
-            sendReplacement(backspace: bs, chars: chars, method: method, delays: delays, proxy: proxy)
-        }
-
-        TextInjector.shared.clearSessionBuffer()
-        RustBridge.clearBuffer()
+    // Issue #149: Restore shortcut - restore raw ASCII if enabled
+    if AppState.shared.restoreShortcutEnabled && matchesRestoreShortcut(keyCode: keyCode, flags: flags) {
+        triggerRestoreShortcut(flags: flags, proxy: proxy)
         return nil  // Consume the event so it doesn't propagate
     }
 
@@ -1238,9 +1228,9 @@ private func keyboardCallback(
         skipWordRestoreAfterClick = false
     }
 
-    // Block ESC from reaching Rust if escRestore is enabled but shortcut is NOT ESC
+    // Block ESC from reaching Rust if restoreShortcutEnabled is enabled but shortcut is NOT ESC
     // This prevents Rust from auto-restoring when user configured a different shortcut
-    if keyCode == KeyCode.esc && AppState.shared.escRestore {
+    if keyCode == KeyCode.esc && AppState.shared.restoreShortcutEnabled {
         let isEscShortcut = currentRestoreShortcut.keyCode == KeyCode.esc && currentRestoreShortcut.modifiers == 0
         if !isEscShortcut {
             // ESC pressed but shortcut is not ESC - just pass through without restore

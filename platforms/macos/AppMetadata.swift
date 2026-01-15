@@ -76,7 +76,7 @@ enum SettingsKey {
     static let shortcuts = "gonhanh.shortcuts"
     static let autoWShortcut = "gonhanh.autoWShortcut"
     static let bracketShortcut = "gonhanh.bracketShortcut"
-    static let escRestore = "gonhanh.escRestore"
+    static let restoreShortcutEnabled = "gonhanh.escRestore"  // Keep old key for backward compat
     static let restoreShortcut = "gonhanh.shortcut.restore"
     static let modernTone = "gonhanh.modernTone"
     static let englishAutoRestore = "gonhanh.englishAutoRestore"
