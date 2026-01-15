@@ -309,7 +309,7 @@ class AppState: ObservableObject {
 
     func savePerAppMode(bundleId: String, enabled: Bool) {
         var modes = UserDefaults.standard.dictionary(forKey: SettingsKey.perAppModes) as? [String: Bool] ?? [:]
-        if enabled { modes.removeValue(forKey: bundleId) } else { modes[bundleId] = false }
+        modes[bundleId] = enabled  // Store both ON and OFF so hasPerAppMode works correctly
         UserDefaults.standard.set(modes, forKey: SettingsKey.perAppModes)
     }
 
