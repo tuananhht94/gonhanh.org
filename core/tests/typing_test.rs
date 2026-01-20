@@ -388,6 +388,27 @@ const TELEX_TYPOS: &[(&str, &str)] = &[
     // Mark then tone
     ("asa", "ấ"),
     ("oso", "ố"),
+    //
+    // ============================================================
+    // SYLLABLE BOUNDARY - mark key should NOT cross syllables
+    // When consonant+vowel follows a marked syllable, new mark key
+    // should pass through as letter, NOT modify previous syllable
+    // ============================================================
+    //
+    // thử + go + x → thửgox (x is letter, NOT mark on ử)
+    ("thuwrgox", "thửgox"),
+    // Similar patterns
+    ("thuwrgos", "thửgos"), // s should be letter
+    ("thuwrgor", "thửgor"), // r should be letter
+    ("thuwrgof", "thửgof"), // f should be letter
+    ("thuwrgoj", "thửgoj"), // j should be letter
+    // With different first syllable marks
+    ("thuwsgox", "thứgox"), // sắc on ư, then x is letter
+    ("thuwfgox", "thừgox"), // huyền on ư, then x is letter
+    ("thuwxgox", "thữgox"), // ngã on ư, then x is letter
+    ("thuwjgox", "thựgox"), // nặng on ư, then x is letter
+    // Multi-syllable with mark on compound vowel
+    ("dduowjckho", "đượckho"), // được + kho, mark should stay on ươ
 ];
 
 // ============================================================

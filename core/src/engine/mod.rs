@@ -2474,6 +2474,29 @@ impl Engine {
         let pos =
             Phonology::find_tone_position(&vowels, has_final, self.modern_tone, has_qu, has_gi);
 
+        // Check for syllable boundary: if there's a consonant between the target vowel
+        // and a later vowel, the mark key should NOT cross syllables.
+        // Example: "thử" + "go" + 'x' → 'x' should be letter, NOT modify 'ử'
+        //
+        // This prevents mark keys from being applied to previous syllables when
+        // a new syllable (consonant+vowel) has been started.
+        let has_vowel_after_pos = vowels.iter().any(|v| v.pos > pos);
+        if has_vowel_after_pos {
+            let has_consonant_between = (pos + 1..self.buf.len()).any(|i| {
+                self.buf
+                    .get(i)
+                    .is_some_and(|c| !keys::is_vowel(c.key) && c.key != keys::W)
+            });
+            let has_vowel_after_consonant = vowels
+                .iter()
+                .any(|v| v.pos > pos && self.has_consonant_between(pos, v.pos));
+
+            if has_consonant_between && has_vowel_after_consonant {
+                // Syllable boundary detected - mark key should pass through as letter
+                return None;
+            }
+        }
+
         // Check if target vowel already has the same mark
         // This handles two cases:
         //
@@ -2759,6 +2782,44 @@ impl Engine {
                 if !self.vowels_form_valid_diphthong(&vowels) {
                     // Syllable boundary detected - tone is in previous syllable, don't move it
                     return None;
+                }
+
+                // Even if vowels form a valid diphthong, check if the consonant(s) between
+                // them is a valid Vietnamese final. If not, it's a new syllable initial.
+                // Example: "thử" + "go" → 'g' is NOT a valid final, so 'o' starts new syllable
+                // But: "tín" + "a" → 'n' IS a valid final, could be "tía" typed out of order
+
+                // Find position of next vowel after old_pos
+                let next_vowel_pos = vowels.iter().find(|v| v.pos > old_pos).map(|v| v.pos);
+                if let Some(nvp) = next_vowel_pos {
+                    // Get only consonants between old_pos and next vowel
+                    let consonants_between_vowels: Vec<u16> = (old_pos + 1..nvp)
+                        .filter_map(|i| {
+                            self.buf.get(i).and_then(|c| {
+                                if !keys::is_vowel(c.key) && c.key != keys::W {
+                                    Some(c.key)
+                                } else {
+                                    None
+                                }
+                            })
+                        })
+                        .collect();
+
+                    // Check if consonants form a valid Vietnamese final
+                    let is_valid_final = match consonants_between_vowels.len() {
+                        1 => constants::VALID_FINALS_1.contains(&consonants_between_vowels[0]),
+                        2 => {
+                            let pair = [consonants_between_vowels[0], consonants_between_vowels[1]];
+                            constants::VALID_FINALS_2.contains(&pair)
+                        }
+                        _ => false, // 0 or 3+ consonants - not a valid final
+                    };
+
+                    if !is_valid_final {
+                        // Consonant is not a valid final - it's a new syllable initial
+                        // Don't reposition the tone
+                        return None;
+                    }
                 }
             }
 
