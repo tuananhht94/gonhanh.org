@@ -409,6 +409,8 @@ const TELEX_TYPOS: &[(&str, &str)] = &[
     ("thuwjgox", "thựgox"), // nặng on ư, then x is letter
     // Multi-syllable with mark on compound vowel
     ("dduowjckho", "đượckho"), // được + kho, mark should stay on ươ
+    // Closed syllable - mark key after final consonant should be letter
+    ("mowsicf", "mớicf"), // mới + c (final) + f (letter, NOT huyền on ớ)
 ];
 
 // ============================================================

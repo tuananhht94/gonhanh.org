@@ -2545,6 +2545,35 @@ impl Engine {
                     return Some(Result::send(0, &[]));
                 }
             }
+
+            // Check if target vowel already has a DIFFERENT mark AND syllable is closed
+            // AND the marked vowel is NOT the last vowel (user has moved on to new syllable)
+            //
+            // Example: "mớic" + 'f' → "mớicf"
+            //   - Vowels: ớ at pos 1, i at pos 2
+            //   - Mark is on ớ (pos 1), last vowel is i (pos 2)
+            //   - Mark position < last vowel position → user typed diphthong, moved on
+            //   - 'f' should be letter, NOT replace sắc with huyền
+            //
+            // Counter-example: "việt" + 's' → "việts" or change ệ→ế
+            //   - Vowels: i at pos 1, ệ at pos 2
+            //   - Mark is on ệ (pos 2), last vowel is also ệ (pos 2)
+            //   - Mark position == last vowel position → user is correcting mark
+            //   - 's' should change mark from nặng to sắc
+            if c.mark > mark::NONE && c.mark != mark_val {
+                let last_vowel_pos = vowels.last().map(|v| v.pos).unwrap_or(0);
+                let has_final_after_vowels = self
+                    .buf
+                    .iter()
+                    .skip(last_vowel_pos + 1)
+                    .any(|ch| !keys::is_vowel(ch.key) && ch.key != keys::W);
+
+                // Only block if mark is on earlier vowel (not last vowel) AND syllable is closed
+                if has_final_after_vowels && pos < last_vowel_pos {
+                    // Syllable is closed AND mark is on earlier vowel - user has moved on
+                    return None;
+                }
+            }
         }
 
         if let Some(c) = self.buf.get_mut(pos) {
