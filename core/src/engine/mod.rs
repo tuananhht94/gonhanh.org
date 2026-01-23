@@ -1919,13 +1919,56 @@ impl Engine {
                                             .buf
                                             .get(i + 1)
                                             .is_some_and(|ch| keys::is_vowel(ch.key));
+                                    // Check for valid 3-vowel pattern like "xuata" → "xuât", "buomo" → "buôm"
+                                    // Requirements:
+                                    // 1. Exactly 3 vowels total (2 in buffer + 1 trigger)
+                                    // 2. First vowel is 'u' with no transformation
+                                    // 3. Target is 'a' or 'o' (forming "ua"→"uâ" or "uo"→"uô" diphthong)
+                                    // 4. First two vowels are adjacent
+                                    // 5. Buffer length <= 4 (typical Vietnamese syllable size: C+V1+V2+C)
+                                    // 6. Initial consonant must be common Vietnamese pattern for this diphthong
+                                    //    Exclude: g, q (foreign gu- patterns), d (duomo is Italian)
+                                    // This specifically handles: xuất, tuất, luật, buồm, cuốn, muốn, etc.
+                                    let vowel_positions: Vec<(usize, u16)> = self
+                                        .buf
+                                        .iter()
+                                        .enumerate()
+                                        .filter(|(_, c)| keys::is_vowel(c.key))
+                                        .map(|(pos, c)| (pos, c.key))
+                                        .collect();
+
+                                    // Check if initial consonant is likely foreign pattern
+                                    // g/q: "guatanamo", "quest"
+                                    // d: "duomo" (Italian), but Vietnamese "đ" uses stroke
+                                    let has_foreign_initial = self.buf.get(0).is_some_and(|ch| {
+                                        matches!(ch.key, keys::G | keys::Q | keys::D)
+                                    });
+
+                                    // Target must be 'a' or 'o' (circumflex vowels in ua/uo diphthongs)
+                                    let is_valid_circumflex_target =
+                                        matches!(key, keys::A | keys::O);
+
+                                    let is_valid_3_vowel_diphthong_pattern = self.buf.len() <= 4  // Max syllable size before trigger
+                                            && vowel_positions.len() == 2  // Only 2 in buffer, 3rd is being typed
+                                            && has_adjacent_vowel_before
+                                            && is_valid_circumflex_target  // Trigger must be 'a' or 'o'
+                                            && !has_foreign_initial  // Exclude foreign patterns
+                                            && self.buf.get(i - 1).is_some_and(|ch| {
+                                                ch.key == keys::U  // Only 'u' before target
+                                                    && ch.tone == 0
+                                                    && ch.mark == 0
+                                            })
+                                            && self.buf.get(i).is_some_and(|ch| ch.key == key); // Target matches trigger
+
                                     let has_any_adjacent_vowel =
                                         has_adjacent_vowel_before || has_adjacent_vowel_after;
                                     // Block if: has adjacent vowel (diphthong pattern) with non-extending final
+                                    // UNLESS it's the specific 3-vowel diphthong pattern (xuata)
                                     if is_same_vowel_trigger
                                         && is_non_extending_final
                                         && target_has_no_mark
-                                        && !has_any_adjacent_vowel
+                                        && (!has_any_adjacent_vowel
+                                            || is_valid_3_vowel_diphthong_pattern)
                                     {
                                         // Apply circumflex to first vowel
                                         if let Some(c) = self.buf.get_mut(i) {

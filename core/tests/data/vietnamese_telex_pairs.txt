@@ -2719,6 +2719,7 @@ bu	bu
 buf	bù
 buas	búa
 buaf	bùa
+buomo	buôm
 bubank	bubank
 bubaye	bubaye
 bubba	bubba
@@ -25991,6 +25992,7 @@ xuoongx	xuỗng
 xueenhf	xuềnh
 xuaats	xuất
 xuatas	xuất
+xuata	xuât
 xuytj	xuỵt
 xvii	xvii
 xx	xx
