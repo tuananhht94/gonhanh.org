@@ -414,7 +414,11 @@ pub fn is_foreign_word_pattern(
         let is_valid_pattern = match vowels.len() {
             2 => {
                 let pair = [vowels[0], vowels[1]];
-                constants::VALID_DIPHTHONGS.contains(&pair)
+                // Same-vowel pairs (AA, EE, OO) are Telex circumflex patterns, not foreign
+                // These are intermediate states: "boo" → "bô" with circumflex pending
+                let is_same_vowel_circumflex =
+                    pair[0] == pair[1] && matches!(pair[0], keys::A | keys::E | keys::O);
+                is_same_vowel_circumflex || constants::VALID_DIPHTHONGS.contains(&pair)
             }
             3 => {
                 let triple = [vowels[0], vowels[1], vowels[2]];
