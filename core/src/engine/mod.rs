@@ -1940,9 +1940,15 @@ impl Engine {
                                     // Check if initial consonant is likely foreign pattern
                                     // g/q: "guatanamo", "quest"
                                     // d: "duomo" (Italian), but Vietnamese "đ" uses stroke
+                                    // EXCEPTION: "gi" is a valid Vietnamese initial (giâm, giận, etc.)
+                                    let is_gi_initial = self.buf.get(0).map(|c| c.key)
+                                        == Some(keys::G)
+                                        && self.buf.get(1).map(|c| c.key) == Some(keys::I)
+                                        && vowel_positions.len() >= 2
+                                        && vowel_positions[0].0 == 1; // I must be at position 1
                                     let has_foreign_initial = self.buf.get(0).is_some_and(|ch| {
                                         matches!(ch.key, keys::G | keys::Q | keys::D)
-                                    });
+                                    }) && !is_gi_initial;
 
                                     // Target must be 'a' or 'o' (circumflex vowels in ua/uo diphthongs)
                                     let is_valid_circumflex_target =
@@ -1962,13 +1968,34 @@ impl Engine {
 
                                     let has_any_adjacent_vowel =
                                         has_adjacent_vowel_before || has_adjacent_vowel_after;
+
+                                    // Check for gi-initial pattern: gi + a + C + a → giâ + C
+                                    // In Vietnamese, "gi" is a consonant cluster, so "giama" → "giâm"
+                                    // The I in "gi" is part of the initial, not a separate vowel
+                                    let is_gi_initial_pattern = is_gi_initial
+                                        && vowel_positions.len() == 2  // I and A
+                                        && vowel_positions[0].1 == keys::I  // First is I (part of gi)
+                                        && vowel_positions[1].1 == key  // Second matches trigger
+                                        && is_same_vowel_trigger
+                                        && is_non_extending_final;
+
                                     // Block if: has adjacent vowel (diphthong pattern) with non-extending final
                                     // UNLESS it's the specific 3-vowel diphthong pattern (xuata)
+                                    // OR it's the gi-initial pattern (giama)
+                                    //
+                                    // Also allow when target already has mark AND no adjacent vowel:
+                                    // Pattern: V(mark) + C + V → Circumflex on first V, preserve mark
+                                    // Example: "afma" → à + m + a → ầ + m (a with huyền gets circumflex)
+                                    let allow_with_existing_mark = !has_any_adjacent_vowel
+                                        && is_non_extending_final
+                                        && self.buf.get(i).is_some_and(|c| c.mark > 0);
+
                                     if is_same_vowel_trigger
                                         && is_non_extending_final
-                                        && target_has_no_mark
+                                        && (target_has_no_mark || allow_with_existing_mark)
                                         && (!has_any_adjacent_vowel
-                                            || is_valid_3_vowel_diphthong_pattern)
+                                            || is_valid_3_vowel_diphthong_pattern
+                                            || is_gi_initial_pattern)
                                     {
                                         // Apply circumflex to first vowel
                                         if let Some(c) = self.buf.get_mut(i) {
