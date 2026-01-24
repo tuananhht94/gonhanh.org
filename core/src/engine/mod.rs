@@ -2032,17 +2032,29 @@ impl Engine {
                                         && has_single_consonant_final
                                         && self.buf.get(i).is_some_and(|c| c.mark > 0);
 
+                                    // Special case: vowel-initial patterns (ua, uo) with mark
+                                    // Pattern: U + A(mark) + T + A → U + Ấ + T (uất)
+                                    // When first char is vowel U and target has mark, allow circumflex
+                                    let is_vowel_initial_with_mark =
+                                        self.buf.get(0).is_some_and(|c| c.key == keys::U)
+                                            && is_non_extending_final
+                                            && self.buf.get(i).is_some_and(|c| c.mark > 0)
+                                            && is_valid_3_vowel_diphthong_pattern;
+
                                     if is_same_vowel_trigger
                                         && (is_non_extending_final
                                             || is_gi_initial_pattern
-                                            || allow_gi_with_mark)
+                                            || allow_gi_with_mark
+                                            || is_vowel_initial_with_mark)
                                         && (target_has_no_mark
                                             || allow_with_existing_mark
-                                            || allow_gi_with_mark)
+                                            || allow_gi_with_mark
+                                            || is_vowel_initial_with_mark)
                                         && (!has_any_adjacent_vowel
                                             || is_valid_3_vowel_diphthong_pattern
                                             || is_gi_initial_pattern
-                                            || allow_gi_with_mark)
+                                            || allow_gi_with_mark
+                                            || is_vowel_initial_with_mark)
                                     {
                                         // Apply circumflex to first vowel
                                         if let Some(c) = self.buf.get_mut(i) {
