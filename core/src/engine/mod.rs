@@ -2753,6 +2753,43 @@ impl Engine {
             }
         }
 
+        // Fix for ươu triphthong pattern:
+        // In Vietnamese, ươu has horn on ư and ơ only, final u stays plain.
+        // When we have [U(horn), O, U] or [U(horn), O(horn), U], don't apply horn to final U.
+        let buf_len = self.buf.len();
+        if buf_len >= 3 {
+            let last_pos = buf_len - 1;
+            let last_is_plain_u = self
+                .buf
+                .get(last_pos)
+                .map(|c| c.key == keys::U && c.tone == tone::NONE)
+                .unwrap_or(false);
+
+            if last_is_plain_u && result.contains(&last_pos) {
+                // Check if there's O immediately before the final U
+                let o_before_u = self
+                    .buf
+                    .get(last_pos - 1)
+                    .map(|c| c.key == keys::O)
+                    .unwrap_or(false);
+
+                if o_before_u {
+                    // Check if there's U with horn somewhere before the O
+                    let has_u_horn_before_o = (0..last_pos - 1).any(|i| {
+                        self.buf
+                            .get(i)
+                            .map(|c| c.key == keys::U && c.tone == tone::HORN)
+                            .unwrap_or(false)
+                    });
+
+                    if has_u_horn_before_o {
+                        // We're in ươu triphthong pattern - don't apply horn to final U
+                        result.retain(|&pos| pos != last_pos);
+                    }
+                }
+            }
+        }
+
         result
             .into_iter()
             .filter(|&pos| {
