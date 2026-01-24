@@ -121,10 +121,12 @@ fn pattern3_mid_word_consonant_on() {
 fn pattern3_expect_off() {
     let mut e = engine_off();
     let result = type_word(&mut e, "expect ");
-    // When OFF: x→ngã, so "expect" → "ẽpect" or similar
-    assert!(
-        result.contains('ẽ'),
-        "OFF: 'expect ' should have ngã mark, got: '{}'",
+    // "expect" now stays unchanged during typing due to pattern-based revert
+    // When invalid consonant cluster ("pc") is detected, circumflex is reverted to raw input
+    // This happens regardless of auto-restore setting
+    assert_eq!(
+        result, "expect ",
+        "OFF: 'expect ' should stay unchanged due to pattern revert, got: '{}'",
         result
     );
 }

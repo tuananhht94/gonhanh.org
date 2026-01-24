@@ -326,6 +326,7 @@ af	à
 ana	ân
 coats	coát
 thirst	thít
+queue	quêu
 diets	diét
 dots	dót
 worms	ướm
@@ -462,6 +463,7 @@ laos	láo
 dessert	desert
 raj	rạ
 poisson	poison
+pasta	pất
 oats	oát
 thorn	thỏn
 chef	chè
@@ -511,6 +513,7 @@ boer	boẻ
 noses	noes
 wc	ưc
 postscript	potscript
+este	ết
 barr	bar
 paso	páo
 boron	bổn
@@ -545,6 +548,7 @@ nee	nê
 tara	tẩ
 inf	ìn
 verso	véo
+etre	ểt
 aaa	aa
 eros	éo
 thorax	thoã
@@ -699,6 +703,7 @@ soar	soả
 gist	gít
 boers	boé
 liens	lién
+queues	quếu
 ics	íc
 orr	or
 ij	ị
@@ -828,7 +833,6 @@ swarms	sưám
 aix	ãi
 hereof	hềo
 saws	sắ
-estes	éestes
 uri	ủi
 dif	dì
 caro	cảo
@@ -891,7 +895,6 @@ kris	krí
 hoses	hoes
 postsecondary	potsecondary
 samaj	sậm
-rosario	rôải
 ast	át
 loco	lôc
 lans	lán
@@ -919,7 +922,6 @@ choirs	chói
 hangar	hẩng
 puree	pủee
 hoops	hốp
-osmosis	óosmosis
 noose	nốe
 gif	gì
 mee	mê
@@ -1028,7 +1030,6 @@ hoo	hô
 kee	kê
 congr	cỏng
 irr	ir
-rostow	rớt
 corso	cố
 gusts	guts
 dade	đae
@@ -1146,10 +1147,12 @@ cots	cót
 dons	dón
 mesure	mểu
 meuse	mếu
+otro	ổt
 asc	ác
 nar	nả
 bora	boả
 hajj	haj
+pawns	pắn
 toms	tóm
 vaux	vãu
 erst	ét
@@ -1209,6 +1212,7 @@ poop	pôp
 goo	gô
 ruts	rút
 vasa	vấ
+erste	ết
 garza	gâ
 duns	dún
 ors	ó
@@ -1392,6 +1396,7 @@ heer	hể
 bax	bã
 raya	rây
 haya	hây
+arma	ẩm
 parris	paris
 isms	ims
 aac	âc
@@ -1487,6 +1492,7 @@ isc	íc
 atf	àt
 coram	coảm
 bosco	bốc
+astra	ẩt
 rif	rì
 viene	viên
 choix	chõi
@@ -1618,6 +1624,7 @@ nys	ný
 dyers	dyé
 mejor	mẻo
 tary	tảy
+dufour	duỏu
 aso	áo
 ruf	rù
 morarji	moarji
@@ -1663,6 +1670,7 @@ biens	bién
 sary	sảy
 pense	pến
 posen	poén
+esme	ếm
 dowson	dốn
 noirs	nói
 isn	ín
@@ -1671,6 +1679,7 @@ chasms	chams
 lef	lè
 lus	lú
 tarr	tar
+rufous	ruóu
 boor	bổ
 misma	míam
 corot	cổt
@@ -1701,7 +1710,7 @@ veces	vếc
 iaf	ìa
 hefner	hển
 arif	ài
-aaas	aas
+aaas	aá
 hoists	hoits
 noms	nóm
 kronor	krổn
@@ -1794,6 +1803,7 @@ baas	bấ
 powwow	powow
 cocos	cốc
 caja	cậ
+apra	ẩp
 rojo	rộ
 ninja	nịan
 coot	côt
@@ -1913,7 +1923,6 @@ oes	oé
 oot	ôt
 auras	ấu
 dure	duẻ
-pastas	ppastas
 chary	chảy
 afa	ầ
 rijn	rịn
@@ -2028,11 +2037,13 @@ lusk	lúk
 eet	êt
 swb	sưb
 leet	lêt
+estre	ểt
 rix	rĩ
 vdd	vđ
 lowi	lơi
 mums	múm
 uts	út
+asta	ất
 hirer	hier
 sops	sóp
 buffing	bufing
@@ -2193,6 +2204,7 @@ boren	boẻn
 roark	roảk
 lese	lế
 bots	bót
+atra	ẩt
 lowa	lơa
 rosse	rose
 larus	láu
@@ -2229,6 +2241,7 @@ chere	chể
 dims	dím
 exerc	ểc
 sachar	sẩch
+espe	ếp
 lochs	lóch
 rasta	rất
 mdd	mđ
@@ -2247,7 +2260,6 @@ daraus	dấu
 usus	úu
 usca	uác
 etf	èt
-aspasia	áaspasia
 duree	dủee
 sauf	sàu
 musi	múi

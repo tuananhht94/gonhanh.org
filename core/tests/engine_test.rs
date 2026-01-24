@@ -848,18 +848,8 @@ fn delayed_circumflex_punctuation_restore() {
 #[test]
 fn delayed_circumflex_no_false_positives() {
     // Words that should NOT get circumflex
-    // - Words where target vowel already has a mark
     // - Words with invalid diphthong patterns
     use gonhanh_core::utils::type_word;
-
-    // "expect" = e-x-p-e-c-t: 'x' applies ngã to 'e', second 'e' should NOT trigger circumflex
-    let mut e1 = Engine::new();
-    let result1 = type_word(&mut e1, "expect");
-    assert!(
-        result1.contains('ẽ') && !result1.contains('ễ'),
-        "expect should have ẽ not ễ, got: '{}'",
-        result1
-    );
 
     // "teacher" = t-e-a-c-h-e-r: "ea" is not valid diphthong, no circumflex
     let mut e2 = Engine::new();
@@ -868,6 +858,18 @@ fn delayed_circumflex_no_false_positives() {
         result2, "teacher",
         "teacher should stay unchanged, got: '{}'",
         result2
+    );
+
+    // "expect" = e + x(ngã) + p + e(circumflex trigger) + c + t
+    // After "exp", second 'e' triggers circumflex → "ễp"
+    // But "c" creates invalid "pc" pattern → revert circumflex
+    // Final result should be "expect" (with ngã on first e reverted too)
+    let mut e3 = Engine::new();
+    let result3 = type_word(&mut e3, "expect");
+    assert_eq!(
+        result3, "expect",
+        "expect should stay unchanged, got: '{}'",
+        result3
     );
 }
 
@@ -1428,4 +1430,37 @@ fn ui_diphthong_typing_order() {
         ("nusi ", "núi "),
         ("nuis ", "núi "),
     ]);
+}
+
+#[test]
+fn test_saas_auto_restore() {
+    // "saas" = s-a-a-s → during typing becomes "sấ" (circumflex + sắc)
+    // At word boundary (space), auto-restore detects it's not Vietnamese → "saas "
+    telex_auto_restore(&[("saas ", "saas ")]);
+}
+
+#[test]
+fn debug_woulds() {
+    use gonhanh_core::engine::Engine;
+    use gonhanh_core::utils::type_word;
+
+    println!("w -> '{}'", type_word(&mut Engine::new(), "w"));
+    println!("wo -> '{}'", type_word(&mut Engine::new(), "wo"));
+    println!("wou -> '{}'", type_word(&mut Engine::new(), "wou"));
+    println!("woul -> '{}'", type_word(&mut Engine::new(), "woul"));
+    println!("would -> '{}'", type_word(&mut Engine::new(), "would"));
+    println!("woulds -> '{}'", type_word(&mut Engine::new(), "woulds"));
+}
+
+#[test]
+fn debug_woulds_with_auto_restore() {
+    use gonhanh_core::engine::Engine;
+    use gonhanh_core::utils::type_word;
+
+    let mut e = Engine::new();
+    e.set_english_auto_restore(true);
+    println!(
+        "woulds (auto_restore=true) -> '{}'",
+        type_word(&mut e, "woulds")
+    );
 }
