@@ -1705,10 +1705,18 @@ impl Engine {
                                 //
                                 // BUT: Exclude Q + U pattern (like "queue")
                                 // In Vietnamese, Q only appears as part of "qu" initial cluster
-                                // If initial is Q and first vowel is U, it's English (queue, quest)
+                                // For Vietnamese "qu" words: qu + vowels where U is part of initial
+                                // For English "queue": U appears again AFTER the first U
+                                // Detection: initial Q + first vowel U + U appears again later
                                 let initial_q = self.buf.get(0).is_some_and(|c| c.key == keys::Q);
                                 let first_vowel_u = vowels.first().is_some_and(|&v| v == keys::U);
-                                let is_english_qu_pattern = initial_q && first_vowel_u;
+                                // Check if U appears again after the first position (English pattern)
+                                let has_repeated_u =
+                                    vowels.len() > 1 && vowels[1..].contains(&keys::U);
+                                // English "qu" pattern: Q initial + U first + U repeats later
+                                // Vietnamese "qu" pattern: Q initial + U first + no U repeat (quây, quá)
+                                let is_english_qu_pattern =
+                                    initial_q && first_vowel_u && has_repeated_u;
 
                                 let is_valid_vn_triphthong = vowels.len() == 3
                                     && !is_english_qu_pattern
