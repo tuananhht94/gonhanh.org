@@ -1,6 +1,6 @@
 # English 100k Typing Variants Failures
 # Format: WORD \t VARIANT \t EXPECTED \t ACTUAL \t BUFFER
-# Total failures: 488
+# Total failures: 489
 
 been	been	been	bên	bên
 see	see	see	sê	sê
@@ -40,6 +40,7 @@ loop	loop	loop	lôp	lôp
 thee	thee	thee	thê	thê
 moore	moore	moore	mổe	môre
 beer	beer	beer	bể	bêr
+choosing	chooosing	choosing	chooing	chôosing
 deemed	deeemed	deemed	đeeme	dêemed
 keeps	keeps	keeps	kếp	kêps
 dawn	dawn	dawn	dăn	dăn

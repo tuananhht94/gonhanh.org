@@ -5139,12 +5139,14 @@ impl Engine {
     /// After revert, tone modifiers (s, f) should STILL be applied.
     /// This function identifies these patterns to allow tone modifier application.
     ///
-    /// IMPORTANT: Must have valid final consonants (NG or C) to distinguish from English.
-    /// - "boong" + s → "boóng" ✓ (Vietnamese, has NG final)
-    /// - "boo" + s → "boos" ✓ (English, no valid final - skip tone)
+    /// Supports two scenarios:
+    /// 1. Complete pattern: initial + OO + final (NG/C) → allow tone after final
+    /// 2. Partial pattern: initial + OO (no final yet) → allow tone before final
+    ///
+    /// For partial patterns (no final), we only match triple-o word initials.
     fn is_vietnamese_triple_o_word(&self) -> bool {
-        if self.buf.len() < 4 {
-            // Minimum: initial + OO + final (e.g., COOC = 4 chars)
+        if self.buf.len() < 3 {
+            // Minimum: initial + OO (e.g., BOO = 3 chars for partial)
             return false;
         }
 
@@ -5152,14 +5154,9 @@ impl Engine {
         let len = keys.len();
 
         // Check for valid finals: NG or C
-        // NG final: last two chars are N + G
-        // C final: last char is C
         let has_ng_final = len >= 2 && keys[len - 2] == keys::N && keys[len - 1] == keys::G;
         let has_c_final = keys[len - 1] == keys::C;
-
-        if !has_ng_final && !has_c_final {
-            return false;
-        }
+        let has_valid_final = has_ng_final || has_c_final;
 
         // Find double O position
         let double_o_pos = keys
@@ -5173,22 +5170,33 @@ impl Engine {
         // Check valid initials for Vietnamese triple-o words
         let first_key = keys[0];
 
-        // Pattern: [initial] + OO at position 1,2 + final
-        // Single consonant initials: B, C, G, M, S, T, D
-        if matches!(
+        // Single consonant initials: B, C, G, M, S, T, D at position 0, OO at position 1,2
+        let single_initial_match = matches!(
             first_key,
             keys::B | keys::C | keys::G | keys::M | keys::S | keys::T | keys::D
-        ) && oo_pos == 1
-        {
+        ) && oo_pos == 1;
+
+        // CH initial: CH at position 0,1, OO at position 2,3
+        let ch_initial_match =
+            first_key == keys::C && len >= 2 && keys[1] == keys::H && oo_pos == 2;
+
+        if !single_initial_match && !ch_initial_match {
+            return false;
+        }
+
+        // CASE 1: Complete pattern with valid final (NG/C) → always match
+        if has_valid_final {
             return true;
         }
 
-        // CH initial: CH + OO at position 2,3 + final
-        if first_key == keys::C && keys.len() >= 2 && keys[1] == keys::H && oo_pos == 2 {
-            return true;
-        }
-
-        false
+        // CASE 2: Partial pattern (no final yet) → only allow for CH initial
+        // CH initial is unique (no common English "choo" words), so we can safely
+        // allow tone modifiers before final for choòng pattern.
+        // Other initials (B, G, M, S, T, etc.) may conflict with English patterns,
+        // so they require the final consonant to be present first.
+        // Example: gooongf → goòng (tone after final)
+        let oo_at_end = oo_pos + 2 == len;
+        ch_initial_match && oo_at_end
     }
 
     /// Check if raw_input is valid English (for unified auto-restore logic)

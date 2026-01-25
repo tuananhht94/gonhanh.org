@@ -3421,10 +3421,7 @@ bìu	bifu,biuf
 díu	disu,dius
 bĩu	biux,bixu
 bíu	bisu,bius
-Blowing	Bloiwng
-dust	dust
 and	and
-wind.	wind.
 bo	bo
 bo	bo
 bo	bo
@@ -16034,7 +16031,7 @@ mắt	matsw,matws,mawst,mawts
 gọng	gojng,gongj
 gọng	gojng,gongj
 kìm	kifm,kimf
-gòong	gooofng,gooongf
+goòng	gooongf
 góp	gops,gosp
 góp	gops,gosp
 chuyện	chuyeejn,chuyeenj,chuyejen,chuyenej,chuyenje
@@ -26612,7 +26609,6 @@ nguyên	nguyeen,nguyene
 tử	turw,tuwr
 nguyên	nguyeen,nguyene
 tử	turw,tuwr
-atom	aotm
 nguyên	nguyeen,nguyene
 vật	vaajt,vaatj,vajat,vataj,vatja
 liệu	lieeuj,lieuej,lieuje
