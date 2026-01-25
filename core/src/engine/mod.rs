@@ -1142,8 +1142,11 @@ impl Engine {
         // Example: "booo" → "boo" (revert), then "s" → "boos" (not "boós")
         // Example: "seee" → "see" (revert), then "m" → "seem" (not "seém")
         // This applies to ALL subsequent keys until word ends (space/break clears flag)
-        // EXCEPTION: Vietnamese triple-o words (boóng, choòng, đoòng, etc.) should still accept modifiers
-        let skip_after_revert = self.had_circumflex_revert && !self.is_vietnamese_triple_o_word();
+        // EXCEPTION: Vietnamese triple-o words with valid tones (s=sắc, f=huyền)
+        // Triple-o words only use sắc or huyền tones, NOT ngã (x), hỏi (r), nặng (j)
+        let is_valid_triple_o_tone =
+            (key == keys::S || key == keys::F) && self.is_vietnamese_triple_o_word();
+        let skip_after_revert = self.had_circumflex_revert && !is_valid_triple_o_tone;
 
         // Check modifiers by scanning buffer for patterns
 
@@ -5189,14 +5192,13 @@ impl Engine {
             return true;
         }
 
-        // CASE 2: Partial pattern (no final yet) → only allow for CH initial
-        // CH initial is unique (no common English "choo" words), so we can safely
-        // allow tone modifiers before final for choòng pattern.
-        // Other initials (B, G, M, S, T, etc.) may conflict with English patterns,
-        // so they require the final consonant to be present first.
-        // Example: gooongf → goòng (tone after final)
+        // CASE 2: Partial pattern (no final yet) → only for initials without English collision
+        // Allow: CH, D, G, T, S (no common English "choos", "doos", "goos", "toos", "soos")
+        // Exclude: B, C, M (collide with English "boos", "coos", "moos")
+        // This allows "gooofng" → "goòng" while keeping "booos" → "boos"
         let oo_at_end = oo_pos + 2 == len;
-        ch_initial_match && oo_at_end
+        let safe_partial_initial = matches!(first_key, keys::D | keys::G | keys::T | keys::S);
+        (ch_initial_match || (safe_partial_initial && single_initial_match)) && oo_at_end
     }
 
     /// Check if raw_input is valid English (for unified auto-restore logic)

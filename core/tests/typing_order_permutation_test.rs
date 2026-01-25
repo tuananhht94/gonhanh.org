@@ -633,15 +633,22 @@ fn generate_circumflex_cancel_variants(parts: &SyllableParts) -> Vec<String> {
         }
     }
 
-    // Generate patterns: tone before final, and tone after final (if applicable)
-    let mut patterns = vec![format!(
+    let mut patterns = Vec::new();
+
+    // Generate BOTH patterns for triple-o words:
+    // 1. "Tone before final": initial + ooo + tone + final (e.g., gooofng → goòng)
+    // 2. "Tone after final": initial + ooo + final + tone (e.g., gooongf → goòng)
+
+    // Pattern 1: Tone before final
+    patterns.push(format!(
         "{}{}{}{}",
         parts.initial,
         vowel_str,
         parts.tone.map(|t| t.to_string()).unwrap_or_default(),
         parts.final_cons
-    )];
+    ));
 
+    // Pattern 2: Tone after final (only if both tone and final exist)
     if parts.tone.is_some() && !parts.final_cons.is_empty() {
         patterns.push(format!(
             "{}{}{}{}",

@@ -1,6 +1,6 @@
 # English 100k Typing Variants Failures
 # Format: WORD \t VARIANT \t EXPECTED \t ACTUAL \t BUFFER
-# Total failures: 489
+# Total failures: 490
 
 been	been	been	bên	bên
 see	see	see	sê	sê
@@ -375,6 +375,7 @@ geen	geeen	geen	geeen	gêen
 arawak	arawak	arawak	ẩk	arăak
 nonfood	nonfood	nonfood	nònod	nonfôd
 koopman	kooopman	koopman	kooopman	kôopman
+goof	gooof	goof	goò	gôof
 goof	goof	goof	gồ	gôf
 beekeepers	beeekeeepers	beekeepers	beekeeepers	bêekêepers
 meow	meow	meow	meơ	meơ
