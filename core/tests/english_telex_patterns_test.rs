@@ -171,8 +171,9 @@ fn insert_cancel_char(word: &str, pattern: &str, cancel_char: char) -> String {
             // Check if preceded by 'w' for double vowel patterns (aa/ee/oo)
             // In this case, 'w' creates horn/breve, not circumflex, so no cancel needed
             // Examples: harwood (w+oo), biweekly (w+ee), sapwood (w+oo)
-            let preceded_by_w =
-                i > 0 && chars[i - 1].to_ascii_lowercase() == 'w' && matches!(pattern, "aa" | "ee" | "oo");
+            let preceded_by_w = i > 0
+                && chars[i - 1].to_ascii_lowercase() == 'w'
+                && matches!(pattern, "aa" | "ee" | "oo");
 
             if preceded_by_w {
                 // Skip cancel, just add the pattern as-is
