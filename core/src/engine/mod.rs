@@ -4156,33 +4156,48 @@ impl Engine {
             return None;
         }
 
-        // Issue #211: Skip auto-restore for extended vowel patterns
-        // When user types "áaa", "hảaa", "cưuuuuu", or "ơiiiiii", this is intentional Vietnamese
-        // (casual messaging) not English that needs to be restored.
+        // Issue #211: Skip auto-restore for extended character patterns
+        // When user types "ơiiiiii", "điiii", "ôiiii", "khôngggg", etc.
+        // This is intentional Vietnamese (casual messaging) not English.
         //
-        // Check if buffer has HORN modifier (from 'w' key - intentional Vietnamese)
-        // AND has CONSECUTIVE extended vowels (like "uuuuu" or "iiiii")
+        // Check if buffer has ANY Vietnamese-specific modifier:
+        // - HORN: ơ, ư, ă (from 'w' key)
+        // - CIRCUMFLEX: ô, â, ê (from double vowel)
+        // - STROKE: đ (from 'dd')
+        // AND has CONSECUTIVE extended characters (3+ same key in a row)
         //
-        // NOTE: Must be CONSECUTIVE - "WebSocket" has 'e' twice but not consecutive, should restore
-        // NOTE: reverted_circumflex_key handles the original Issue #211 case (áaa pattern)
+        // NOTE: Must be CONSECUTIVE - "WebSocket" has 'e' twice but not consecutive
+        // NOTE: reverted_circumflex_key handles Issue #211 case (áaa pattern after revert)
         //
         // Examples:
-        //   "cuwuuuuus" → "cứuuuuu" → horn 'ư' (from w) + consecutive 'u's → keep Vietnamese
-        //   "owiiiiii" → "ơiiiiii" → horn 'ơ' (from w) + consecutive 'i's → keep Vietnamese
-        //   "WebSocket" → has 'W' (horn) but 'e's not consecutive → should restore to English
-        let has_horn_modifier = self.buf.iter().any(|c| c.tone == tone::HORN);
-
-        // Check for consecutive extended vowels: 3+ of the same vowel key in a row
-        // Require 3+ to distinguish from English words like "sweet" (ee), "swoon" (oo)
-        // Casual Vietnamese has many repeated vowels: ơiiiiii, cứuuuuu
-        let buf_chars: Vec<_> = self.buf.iter().collect();
-        let has_consecutive_extended_vowels = buf_chars.windows(3).any(|triple| {
-            keys::is_vowel(triple[0].key)
-                && keys::is_vowel(triple[1].key)
-                && keys::is_vowel(triple[2].key)
-                && triple[0].key == triple[1].key
-                && triple[1].key == triple[2].key
+        //   "cuwuuuuus" → "cứuuuuu" → horn + consecutive u's → keep Vietnamese
+        //   "owiiiiii" → "ơiiiiii" → horn + consecutive i's → keep Vietnamese
+        //   "ooiiii" → "ôiiii" → circumflex + consecutive i's → keep Vietnamese
+        //   "ddiiii" → "điiii" → stroke + consecutive i's → keep Vietnamese
+        //   "khongggg" → "không" + consecutive g's → keep Vietnamese
+        let has_vn_specific_modifier = self.buf.iter().any(|c| {
+            c.tone == tone::HORN      // ơ, ư, ă
+                || c.tone == tone::CIRCUMFLEX // ô, â, ê
+                || c.key == keys::D && self.buf.iter().filter(|x| x.key == keys::D).count() == 0
+                    && self.had_telex_transform // đ from dd
         });
+
+        // Also check for stroke (đ) - when D in buffer but had_telex_transform and raw had 'dd'
+        let has_stroke = self
+            .raw_input
+            .windows(2)
+            .any(|pair| pair[0].0 == keys::D && pair[1].0 == keys::D)
+            && self.buf.iter().any(|c| c.key == keys::D);
+
+        let has_vn_modifier = has_vn_specific_modifier || has_stroke;
+
+        // Check for consecutive extended characters: 3+ of the same key in a row
+        // Can be vowels (iiiii, uuuuu) or consonants (ggggg for emphasis)
+        // Require 3+ to distinguish from English words like "sweet" (ee), "flood" (oo)
+        let buf_chars: Vec<_> = self.buf.iter().collect();
+        let has_consecutive_extended = buf_chars
+            .windows(3)
+            .any(|triple| triple[0].key == triple[1].key && triple[1].key == triple[2].key);
 
         // Also check original Issue #211 pattern: reverted_circumflex + all vowels same key
         let all_vowels_same = if self.reverted_circumflex_key.is_some() {
@@ -4197,8 +4212,8 @@ impl Engine {
             false
         };
 
-        if (has_horn_modifier && has_consecutive_extended_vowels) || all_vowels_same {
-            // Extended vowel pattern - skip auto-restore
+        if (has_vn_modifier && has_consecutive_extended) || all_vowels_same {
+            // Extended character pattern - skip auto-restore
             return None;
         }
 

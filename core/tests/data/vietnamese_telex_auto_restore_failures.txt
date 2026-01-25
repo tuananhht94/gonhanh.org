@@ -1,6 +1,6 @@
 # Vietnamese Telex Auto-Restore Failures (should not be restored)
 # Format: INPUT \t EXPECTED \t ACTUAL
-# Total failures: 230
+# Total failures: 217
 
 baaybie	bâybie	baaybie
 beeta	bêta	beeta
@@ -50,7 +50,6 @@ hoomnay	hômnay	hoomnay
 hawi	hăi	hawi
 huwmm	hưmm	huwmm
 huwmmf	hừmm	huwmmf
-huwmmmf	hừmmm	huwmmf
 hddrung	hđrung	hddrung
 hawy	hăy	hawy
 iaau	iâu	iaau
@@ -72,10 +71,6 @@ khoog	khôg	khoog
 khoomg	khômg	khoomg
 khoongbel	khôngbel	khoongbel
 khoongg	khôngg	khoongg
-khoonggg	khônggg	khoongg
-khoongggg	khôngggg	khoongg
-khoonggggg	khônggggg	khoongg
-khoongggggg	khôngggggg	khoongg
 khoonghl	khônghl	khoonghl
 khoongl	khôngl	khoongl
 khoongol	khôngol	khoongol
@@ -158,7 +153,6 @@ thooil	thôil	thooil
 thooy	thôy	thooy
 thaw	thă	thaw
 thowlf	thờl	thowlf
-thawngggr	thẳnggg	thawnggr
 tioo	tiô	tioo
 tooii	tôii	tooii
 tooil	tôil	tooil
@@ -181,26 +175,21 @@ xoonat	xônat	xoonat
 xuata	xuât	xuata
 xaw	xă	xaw
 xowcua	xơcua	xowcua
-yeeuuu	yêuuu	yeeuuu
 yooga	yôga	yooga
 aw	ă	aw
 ddagn	đagn	ddagn
 ddaaul	đâul	ddaaul
 ddaayl	đâyl	ddaayl
-ddaayyy	đâyyy	ddaayyy
 awcquy	ăcquy	awcquy
 ddenta	đenta	ddenta
 awh	ăh	awh
 uwh	ưh	uwh
 owhf	ờh	owhf
 uwhf	ừh	uwhf
-awhhh	ăhhh	awhh
 uwhm	ưhm	uwhm
 uwhmf	ừhm	uwhmf
 ddieu	đieu	ddieu
 ddieuf	đièu	ddieuf
-ddiii	điii	ddiii
-ddiiiiiiiii	điiiiiiiii	ddiiiiiiiii
 ddiieeuf	điiều	ddiieeuf
 ddinamit	đinamit	ddinamit
 ddinamo	đinamo	ddinamo
@@ -210,8 +199,6 @@ ddkys	đký	ddkys
 uwmm	ưmm	uwmm
 owmmf	ờmm	owmmf
 uwmmf	ừmm	uwmmf
-uwmmmf	ừmmm	uwmmf
-uwmmmmf	ừmmmm	uwmmf
 awngten	ăngten	awngten
 awnten	ănten	awnten
 ddooia	đôia	ddooia

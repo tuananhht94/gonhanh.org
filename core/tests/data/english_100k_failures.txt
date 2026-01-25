@@ -1,6 +1,6 @@
 # English 100k Typing Variants Failures
 # Format: WORD \t VARIANT \t EXPECTED \t ACTUAL \t BUFFER
-# Total failures: 1541
+# Total failures: 1567
 
 been	been	been	bên	bên
 see	see	see	sê	sê
@@ -57,6 +57,7 @@ loop	loop	loop	lôp	lôp
 nodded	noddded	nodded	noddded	nođded
 neighborhood	neighborhoood	neighborhood	neighborhoood	neighborhôod
 committees	committeees	committees	committeees	committêes
+guarantee	guaranteee	guarantee	guẩnteee	guarantêe
 thee	thee	thee	thê	thê
 moore	moore	moore	mổe	môre
 beer	beer	beer	bể	bêr
@@ -80,6 +81,7 @@ decree	decreee	decree	decreee	decrêe
 volunteers	volunteeers	volunteers	volunteeers	voluntêers
 deer	deer	deer	dể	dêr
 buddha	budddha	buddha	budddha	buđdha
+guaranteed	guaranteeed	guaranteed	guẩnteeed	guarantêed
 cow	cow	cow	cơ	cơ
 peers	peers	peers	pế	pêrs
 deeds	deeds	deeds	đế	dêds
@@ -107,6 +109,7 @@ downtown	dowwntowwn	downtown	downtowwn	dơwntơwn
 ladder	laddder	ladder	laddder	lađder
 manpower	manpowwer	manpower	manpowwer	manpơwer
 doorway	doorway	doorway	dơảy	dôrway
+guarantees	guaranteees	guarantees	guẩnteees	guarantêes
 saddle	sadddle	saddle	sadddle	sađdle
 marrow	marroww	marrow	maroww	marrơw
 nineteen	nineteeen	nineteen	nineteeen	ninetêen
@@ -221,6 +224,7 @@ tee	tee	tee	tê	tê
 yankees	yankeees	yankees	yankeees	yankêes
 borrowers	borrowwers	borrowers	borowwers	borrơwers
 georgetown	georgetowwn	georgetown	georgetowwn	georgetơwn
+kierkegaard	kierkegaaard	kierkegaard	kiểkgaaard	kierkegâard
 seafood	seafoood	seafood	seafoood	seafôod
 moor	moor	moor	mổ	môr
 deem	deem	deem	dêm	dêm
@@ -278,6 +282,7 @@ burrows	burrowws	burrows	burowws	burrơws
 teaspoons	teaspooons	teaspoons	teaspooons	teaspôons
 troubleshooting	troubleshoooting	troubleshooting	troubleshoooting	troubleshôoting
 nominee	nomineee	nominee	nomineee	nominêe
+guaranteeing	guaranteeeing	guaranteeing	guẩnteeeing	guarantêeing
 cameroon	camerooon	cameroon	camerooon	camerôon
 padded	paddded	padded	paddded	pađded
 gallbladder	gallbladdder	gallbladder	gallbladdder	gallblađder
@@ -293,6 +298,7 @@ rees	rees	rees	rế	rês
 yellowstone	yellowwstone	yellowstone	yellowwstone	yellơwstone
 gunpowder	gunpowwder	gunpowder	gunpowwder	gunpơwder
 veneer	veneer	veneer	vener	venêr
+peacekeeping	peacekeeeping	peacekeeping	pêackeeeping	peacekêeping
 taboos	tabooos	taboos	tabooos	tabôos
 pedigree	pedigreee	pedigree	pedigreee	pedigrêe
 canaan	canaan	canaan	canan	canân
@@ -309,6 +315,8 @@ musee	musee	musee	múee	musê
 rudder	ruddder	rudder	ruddder	ruđder
 ballroom	ballrooom	ballroom	ballrooom	ballrôom
 devotee	devoteee	devotee	devoteee	devotêe
+referee	refereee	referee	rểeee	referêe
+referee	referee	referee	rểee	referê
 woo	woo	woo	uô	wô
 bazaar	bazaaar	bazaar	bazaaar	bazâar
 chow	chow	chow	chơ	chơ
@@ -528,6 +536,8 @@ noaa	noaa	noaa	noâ	noâ
 meddle	medddle	meddle	medddle	međdle
 liddell	lidddell	liddell	lidddell	liđdell
 raccoon	raccooon	raccoon	raccooon	raccôon
+referees	refereees	referees	rểeees	referêes
+referees	referees	referees	rểees	referês
 sodden	soddden	sodden	soddden	sođden
 middleman	midddleman	middleman	midddleman	miđdleman
 tattoos	tattooos	tattoos	tattooos	tattôos
@@ -616,6 +626,7 @@ mountaineering	mountaineeering	mountaineering	mountaineeering	mountainêering
 sallow	salloww	sallow	salloww	sallơw
 maddie	madddie	maddie	madddie	mađdie
 paddington	padddington	paddington	padddington	pađdington
+paratroopers	paratrooopers	paratroopers	pẩtrooopers	paratrôopers
 tycoon	tycooon	tycoon	tycooon	tycôon
 bassoon	bassooon	bassoon	basooon	bassôon
 tees	tees	tees	tế	tês
@@ -715,6 +726,7 @@ maddened	madddened	maddened	madddened	mađdened
 heathrow	heathroww	heathrow	heathroww	heathrơw
 seeps	seeps	seeps	sếp	sêps
 aileen	aileeen	aileen	aileeen	ailêen
+datasheet	datasheeet	datasheet	dấtheeet	datashêet
 enfeebled	enfeebled	enfeebled	ènebled	enfêbled
 woof	woof	woof	uồ	wôf
 sawtooth	sawwtoooth	sawtooth	sawtoooth	săwtôoth
@@ -824,6 +836,7 @@ lycee	lyceee	lycee	lyceee	lycêe
 delawares	delawwares	delawares	delawwares	delăwares
 middlemarch	midddlemarch	middlemarch	midddlemarch	miđdlemarch
 detainee	detaineee	detainee	detaineee	detainêe
+vajpayee	vajpayeee	vajpayee	vậpyeee	vajpayêe
 midafternoon	midafternooon	midafternoon	midafternooon	midafternôon
 billow	billoww	billow	billoww	billơw
 redeems	redeeems	redeems	redeeems	redêems
@@ -894,6 +907,7 @@ honeybees	honeybeees	honeybees	honeybeees	honeybêes
 ddl	ddl	ddl	đl	đl
 honeybee	honeybeee	honeybee	honeybeee	honeybêe
 typhoons	typhooons	typhoons	typhooons	typhôons
+peacekeepers	peacekeeepers	peacekeepers	pêackeeepers	peacekêepers
 moores	moores	moores	mốe	môres
 mown	mown	mown	mơn	mơn
 ridder	riddder	ridder	riddder	riđder
@@ -909,6 +923,7 @@ boor	boor	boor	bổ	bôr
 rapeseed	rapeseeed	rapeseed	rapeseeed	rapesêed
 henshaw	henshaww	henshaw	henshaww	henshăw
 eee	eee	eee	ee	êe
+befuddled	befudddled	befuddled	bèudddled	befuđdled
 deen	deen	deen	dên	dên
 nawaz	nawaz	nawaz	na	năaz
 kanawha	kanawwha	kanawha	kanawwha	kanăwha
@@ -979,6 +994,7 @@ siddha	sidddha	siddha	sidddha	siđdha
 coot	coot	coot	côt	côt
 dees	dees	dees	dế	dês
 morgantown	morgantowwn	morgantown	morgantowwn	morgantơwn
+manatee	manateee	manatee	mânteee	manatêe
 saddlebags	sadddlebags	saddlebags	sadddlebags	sađdlebags
 aws	aws	aws	ắ	ăs
 kanagawa	kanagawwa	kanagawa	kanagawwa	kanagăwa
@@ -1047,11 +1063,13 @@ goodfellow	gooodfelloww	goodfellow	goodfelloww	gôodfellơw
 pensees	penseees	pensees	pénees	pensêes
 pensees	pensees	pensees	pénes	pensês
 loons	loons	loons	lốn	lôns
-soiree	soireee	soiree	soire	soirêe
 hows	hows	hows	hớ	hơs
 bassoons	bassooons	bassoons	basooons	bassôons
 coops	coops	coops	cốp	côps
 koopmans	kooopmans	koopmans	kooopmans	kôopmans
+refereed	refereeed	refereed	rểeeed	referêed
+refereed	refereed	refereed	rểeed	referêd
+parakeet	parakeeet	parakeet	pẩkeeet	parakêet
 buddhistic	budddhistic	buddhistic	budddhistic	buđdhistic
 toon	toon	toon	tôn	tôn
 caboose	cabooose	caboose	cabooose	cabôose
@@ -1195,6 +1213,7 @@ awk	awk	awk	ăk	ăk
 katowice	katowwice	katowice	katowwice	katơwice
 puddling	pudddling	puddling	pudddling	puđdling
 veneered	veneered	veneered	venered	venêred
+paratrooper	paratroooper	paratrooper	pẩtroooper	paratrôoper
 heeft	heeft	heeft	hềt	hêft
 hooch	hooch	hooch	hôch	hôch
 gatekeeping	gatekeeeping	gatekeeping	gatekeeeping	gatekêeping
@@ -1249,6 +1268,7 @@ pamphleteers	pamphleteeers	pamphleteers	pamphleteeers	pamphletêers
 rickshaws	rickshawws	rickshaws	rickshawws	rickshăws
 maddock	madddock	maddock	madddock	mađdock
 deedee	deeedeee	deedee	deedeee	dêedêe
+deedee	deedee	deedee	đêee	dêdê
 rodd	roddd	rodd	roddd	rođd
 kidded	kiddded	kidded	kiddded	kiđded
 kawaguchi	kawwaguchi	kawaguchi	kawwaguchi	kăwaguchi
@@ -1263,6 +1283,7 @@ hadde	haddde	hadde	haddde	hađde
 hacksaw	hacksaww	hacksaw	hacksaww	hacksăw
 rockaway	rockawway	rockaway	rockawway	rockăway
 suttee	sutteee	suttee	sutteee	suttêe
+parakeets	parakeeets	parakeets	pẩkeeets	parakêets
 geez	geeez	geez	geeez	gêez
 disallows	disallowws	disallows	disallowws	disallơws
 duree	dureee	duree	dure	durêe
@@ -1280,6 +1301,7 @@ kagawa	kagawwa	kagawa	kagawwa	kagăwa
 swoops	swoops	swoops	suốp	swôps
 saddling	sadddling	saddling	sadddling	sađdling
 passbook	passboook	passbook	pasboook	passbôok
+paratroops	paratrooops	paratroops	pẩtrooops	paratrôops
 noddings	nodddings	noddings	nodddings	nođdings
 godowns	godowwns	godowns	godowwns	godơwns
 cowpox	cowpox	cowpox	cỗp	cơpox
@@ -1294,6 +1316,7 @@ hoon	hoon	hoon	hôn	hôn
 mukerjee	mukerjeee	mukerjee	mukerjeee	mukerjêe
 kingstown	kingstowwn	kingstown	kingstowwn	kingstơwn
 subfloor	subflooor	subfloor	subflooor	subflôor
+manatees	manateees	manatees	mânteees	manatêes
 ddi	ddi	ddi	đi	đi
 trueblood	truebloood	trueblood	truebloood	trueblôod
 siddiqui	sidddiqui	siddiqui	sidddiqui	siđdiqui
@@ -1452,6 +1475,7 @@ fdd	fdd	fdd	fđ	fđ
 colebrooke	colebroooke	colebrooke	colebroooke	colebrôoke
 lebow	leboww	lebow	leboww	lebơw
 roon	roon	roon	rôn	rôn
+paratroop	paratrooop	paratroop	pẩtrooop	paratrôop
 heddle	hedddle	heddle	hedddle	heđdle
 tumbledown	tumbledowwn	tumbledown	tumbledowwn	tumbledơwn
 tralee	traleee	tralee	traleee	tralêe
@@ -1460,6 +1484,7 @@ macaws	macaws	macaws	mắc	macăs
 bengalee	bengaleee	bengalee	bengaleee	bengalêe
 nightgowns	nightgowwns	nightgowns	nightgowwns	nightgơwns
 dershowitz	dershowwitz	dershowitz	dershowwitz	dershơwitz
+wallflower	wallflower	wallflower	ửàlllowe	wallflơer
 landseer	landseeer	landseer	landseeer	landsêer
 dombrowski	dombrowwski	dombrowski	dombrowwski	dombrơwski
 nees	nees	nees	nế	nês
@@ -1498,6 +1523,7 @@ meadowlark	meadowwlark	meadowlark	meadowwlark	meadơwlark
 gees	geees	gees	geees	gêes
 guffaws	guffawws	guffaws	gufawws	guffăws
 sambrook	sambroook	sambrook	sambroook	sambrôok
+macfadden	macfaddden	macfadden	mầcddden	macfađden
 kurnool	kurnoool	kurnool	kurnoool	kurnôol
 potchefstroom	potchefstrooom	potchefstroom	potchefstrooom	potchefstrôom
 lagoonal	lagooonal	lagoonal	lagooonal	lagôonal
