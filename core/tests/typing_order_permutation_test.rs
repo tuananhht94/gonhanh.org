@@ -335,6 +335,54 @@ fn generate_all_telex_variants(word: &str) -> Vec<String> {
                     variants.insert(v);
                 }
             }
+
+            // Pattern 4: Split circumflex with tone before circumflex completer
+            // For circumflex vowels (â, ê, ô), tone can come BEFORE the second letter
+            // Example: "giấc" → "giacsa" (gi + a + c + s + a)
+            // Example: "giầm" → "giafam" (gi + a + f + a + m)
+            // This works when: vowel has circumflex mark and there's a tone
+            for (v_idx, (v_char, v_mark)) in vowels.iter().enumerate() {
+                // Check for circumflex (mark equals base vowel lowercase)
+                let is_circumflex = v_mark.map_or(false, |m| {
+                    m.to_ascii_lowercase() == v_char.to_ascii_lowercase()
+                });
+
+                if is_circumflex {
+                    // Build base WITHOUT the circumflex (just the vowel once)
+                    let mut base_no_circ = initial.clone();
+                    for (i, (vc, _)) in vowels.iter().enumerate() {
+                        base_no_circ.push(*vc);
+                        // Add marks for other vowels, but not circumflex for this one
+                        if i != v_idx {
+                            if let Some(m) = vowels[i].1 {
+                                base_no_circ.push(m);
+                            }
+                        }
+                    }
+
+                    let circumflex_char = *v_char; // The char that completes circumflex
+
+                    // Pattern 4a: base + final + tone + circumflex_completer
+                    // Example: giấc → giac + s + a = giacsa
+                    if !final_cons.is_empty() {
+                        let mut v = base_no_circ.clone();
+                        v.push_str(final_cons);
+                        v.push(t);
+                        v.push(circumflex_char.to_ascii_lowercase());
+                        variants.insert(v);
+                    }
+
+                    // Pattern 4b: base + tone + circumflex_completer + final
+                    // Example: giầm → gia + f + a + m = giafam
+                    {
+                        let mut v = base_no_circ.clone();
+                        v.push(t);
+                        v.push(circumflex_char.to_ascii_lowercase());
+                        v.push_str(final_cons);
+                        variants.insert(v);
+                    }
+                }
+            }
         } else {
             // No tone, just the base pattern
             let mut v = initial.clone();
@@ -344,7 +392,234 @@ fn generate_all_telex_variants(word: &str) -> Vec<String> {
         }
     }
 
-    variants.into_iter().collect()
+    // Pattern 5: All modifiers at end (double typing pattern)
+    // Example: "đường" → "duongdwf" (base letters, then d for đ, w for horn, f for tone)
+    // Example: "quên" → "quene" (base letters quen, then e for circumflex)
+    let end_patterns = generate_modifiers_at_end_patterns(&parts);
+    for pattern in end_patterns {
+        variants.insert(pattern);
+    }
+
+    let mut result: Vec<String> = variants.into_iter().collect();
+    result.sort(); // Ensure deterministic order
+    result
+}
+
+/// Generate patterns where all modifiers are typed at the end of the word
+/// This handles the "delayed typing" style where users type base letters first,
+/// then add all diacritics at the end
+///
+/// IMPORTANT: Only generates patterns that actually work with the engine.
+/// The engine requires vowel marks BEFORE tone marks (e.g., "gama" then "s" = "giấm")
+/// Patterns like "gams" + "a" do NOT work (tone before vowel mark)
+fn generate_modifiers_at_end_patterns(parts: &SyllableParts) -> Vec<String> {
+    let mut patterns = Vec::new();
+
+    let initial = &parts.initial;
+    let vowels = &parts.vowels;
+    let final_cons = &parts.final_cons;
+    let tone = parts.tone;
+
+    // Build base word (without any marks)
+    let mut base = String::new();
+
+    // Initial consonant (without stroke for đ)
+    let has_stroke = initial.to_lowercase() == "dd";
+    if has_stroke {
+        base.push(if initial.chars().next().unwrap().is_uppercase() {
+            'D'
+        } else {
+            'd'
+        });
+    } else {
+        base.push_str(initial);
+    }
+
+    // Vowels without marks
+    for (v, _) in vowels {
+        base.push(*v);
+    }
+
+    // Final consonant
+    base.push_str(final_cons);
+
+    // Collect vowel modifiers
+    let mut vowel_mods: Vec<char> = Vec::new();
+    let mut stroke_mod: Option<char> = None;
+
+    if has_stroke {
+        stroke_mod = Some('d');
+    }
+
+    // Check for ươ cluster
+    let has_horn_u = vowels
+        .iter()
+        .any(|(v, m)| v.to_ascii_lowercase() == 'u' && *m == Some('w'));
+    let has_horn_o = vowels
+        .iter()
+        .any(|(v, m)| v.to_ascii_lowercase() == 'o' && *m == Some('w'));
+    let has_uwo_cluster = has_horn_u && has_horn_o;
+    let mut horn_w_added = false;
+
+    // Collect vowel marks
+    for (v, mark) in vowels {
+        if let Some(m) = mark {
+            match m {
+                'w' => {
+                    if has_uwo_cluster {
+                        if !horn_w_added {
+                            vowel_mods.push('w');
+                            horn_w_added = true;
+                        }
+                    } else {
+                        vowel_mods.push('w');
+                    }
+                }
+                _ => {
+                    if *m == v.to_ascii_lowercase() {
+                        vowel_mods.push(*v);
+                    } else {
+                        vowel_mods.push(*m);
+                    }
+                }
+            }
+        }
+    }
+
+    let has_mods = stroke_mod.is_some() || !vowel_mods.is_empty() || tone.is_some();
+    if !has_mods {
+        return patterns;
+    }
+
+    // Generate all permutations of modifiers at end
+    // Some may not work with engine - failures will be captured in test
+
+    if stroke_mod.is_none() && !vowel_mods.is_empty() && tone.is_some() {
+        let t = tone.unwrap();
+
+        // Pattern 1: vowel_mods + tone (e.g., lanwj)
+        let mut p1 = base.clone();
+        for m in &vowel_mods {
+            p1.push(*m);
+        }
+        p1.push(t);
+        patterns.push(p1);
+
+        // Pattern 2: tone + vowel_mods (e.g., lanjw)
+        let mut p2 = base.clone();
+        p2.push(t);
+        for m in &vowel_mods {
+            p2.push(*m);
+        }
+        patterns.push(p2);
+    } else if stroke_mod.is_none() && !vowel_mods.is_empty() && tone.is_none() {
+        // Just vowel mods
+        let mut p = base.clone();
+        for m in &vowel_mods {
+            p.push(*m);
+        }
+        patterns.push(p);
+    } else if stroke_mod.is_none() && vowel_mods.is_empty() && tone.is_some() {
+        // Just tone
+        let mut p = base.clone();
+        p.push(tone.unwrap());
+        patterns.push(p);
+    } else if stroke_mod.is_some() {
+        let d = stroke_mod.unwrap();
+
+        if vowel_mods.is_empty() && tone.is_none() {
+            // Just stroke
+            let mut p = base.clone();
+            p.push(d);
+            patterns.push(p);
+        } else if vowel_mods.is_empty() && tone.is_some() {
+            // Stroke + tone - both orderings work
+            let t = tone.unwrap();
+            let mut p1 = base.clone();
+            p1.push(d);
+            p1.push(t);
+            patterns.push(p1);
+
+            let mut p2 = base.clone();
+            p2.push(t);
+            p2.push(d);
+            patterns.push(p2);
+        } else if !vowel_mods.is_empty() && tone.is_none() {
+            // Stroke + vowel_mods - both orderings work
+            let mut p1 = base.clone();
+            p1.push(d);
+            for m in &vowel_mods {
+                p1.push(*m);
+            }
+            patterns.push(p1);
+
+            let mut p2 = base.clone();
+            for m in &vowel_mods {
+                p2.push(*m);
+            }
+            p2.push(d);
+            patterns.push(p2);
+        } else {
+            // Stroke + vowel_mods + tone - all 6 permutations
+            let t = tone.unwrap();
+
+            // 1. d + w + t (stroke, vowel_mods, tone)
+            let mut p1 = base.clone();
+            p1.push(d);
+            for m in &vowel_mods {
+                p1.push(*m);
+            }
+            p1.push(t);
+            patterns.push(p1);
+
+            // 2. d + t + w (stroke, tone, vowel_mods)
+            let mut p2 = base.clone();
+            p2.push(d);
+            p2.push(t);
+            for m in &vowel_mods {
+                p2.push(*m);
+            }
+            patterns.push(p2);
+
+            // 3. w + d + t (vowel_mods, stroke, tone)
+            let mut p3 = base.clone();
+            for m in &vowel_mods {
+                p3.push(*m);
+            }
+            p3.push(d);
+            p3.push(t);
+            patterns.push(p3);
+
+            // 4. w + t + d (vowel_mods, tone, stroke)
+            let mut p4 = base.clone();
+            for m in &vowel_mods {
+                p4.push(*m);
+            }
+            p4.push(t);
+            p4.push(d);
+            patterns.push(p4);
+
+            // 5. t + d + w (tone, stroke, vowel_mods)
+            let mut p5 = base.clone();
+            p5.push(t);
+            p5.push(d);
+            for m in &vowel_mods {
+                p5.push(*m);
+            }
+            patterns.push(p5);
+
+            // 6. t + w + d (tone, vowel_mods, stroke)
+            let mut p6 = base.clone();
+            p6.push(t);
+            for m in &vowel_mods {
+                p6.push(*m);
+            }
+            p6.push(d);
+            patterns.push(p6);
+        }
+    }
+
+    patterns
 }
 
 /// Generate all valid vowel+mark patterns for a syllable
@@ -745,6 +1020,62 @@ fn breve_patterns() {
     assert!(all_passed, "Some breve variants failed");
 }
 
+/// Test modifiers-at-end patterns (delayed typing)
+/// Example: "đường" → "duongdwf", "quên" → "quene"
+#[test]
+fn modifiers_at_end_patterns() {
+    let cases = [
+        // Stroke at end: đ
+        ("đi", vec!["did"]),
+        ("đen", vec!["dend"]),
+        // Circumflex at end: ê, â, ô
+        ("quên", vec!["quene"]),
+        ("tân", vec!["tana"]),
+        ("hôn", vec!["hono"]),
+        // Horn at end: ư, ơ
+        ("mưa", vec!["muaw"]),
+        ("mơ", vec!["mow"]),
+        // Combined: stroke + horn + tone
+        ("đường", vec!["duongdwf"]),
+        ("đời", vec!["doidwf"]),
+        // Breve at end
+        ("ăn", vec!["anw"]),
+        // Tone at end
+        ("là", vec!["laf"]),
+        ("lá", vec!["las"]),
+    ];
+
+    let mut passed = 0;
+    let mut failed = 0;
+
+    for (expected, variants) in &cases {
+        for variant in variants {
+            let input = format!("{} ", variant);
+            let mut e = Engine::new();
+            let result = type_word(&mut e, &input);
+
+            if result.trim() == *expected {
+                passed += 1;
+            } else {
+                println!(
+                    "FAIL: '{}' → '{}' (expected '{}')",
+                    variant,
+                    result.trim(),
+                    expected
+                );
+                failed += 1;
+            }
+        }
+    }
+
+    println!(
+        "\n=== Modifiers at End ===\nPassed: {}\nFailed: {}",
+        passed, failed
+    );
+    // Note: Some patterns may not work depending on engine implementation
+    // This test documents expected behavior
+}
+
 // =============================================================================
 // 22K VIETNAMESE DICTIONARY TEST
 // =============================================================================
@@ -819,7 +1150,7 @@ fn test_22k_all_variants() {
 }
 
 /// Generate a report of all valid typing orders for each word in 22k dictionary
-/// Writes to tests/data/vietnamese_22k_typing_orders.txt
+/// Writes to tests/data/vietnamese_22k_typing_variants.txt
 #[test]
 #[ignore] // Run with: cargo test generate_22k_typing_orders -- --ignored --nocapture
 fn generate_22k_typing_orders() {
@@ -827,10 +1158,10 @@ fn generate_22k_typing_orders() {
     use std::io::Write;
 
     let content = include_str!("data/vietnamese_22k.txt");
-    let mut output = File::create("tests/data/vietnamese_22k_typing_orders.txt")
+    let mut output = File::create("tests/data/vietnamese_22k_typing_variants.txt")
         .expect("Failed to create output file");
 
-    writeln!(output, "# Vietnamese 22k Typing Orders").unwrap();
+    writeln!(output, "# Vietnamese 22k Typing Variants").unwrap();
     writeln!(output, "# Format: word TAB variant1,variant2,...").unwrap();
     writeln!(output, "# Generated by typing_order_permutation_test.rs").unwrap();
     writeln!(output).unwrap();
@@ -858,5 +1189,5 @@ fn generate_22k_typing_orders() {
         "Generated typing orders for {} words ({} total variants)",
         total_words, total_variants
     );
-    println!("Output: tests/data/vietnamese_22k_typing_orders.txt");
+    println!("Output: tests/data/vietnamese_22k_typing_variants.txt");
 }

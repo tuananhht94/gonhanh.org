@@ -566,8 +566,7 @@ fn foreign_word_could_no_mark() {
 fn foreign_word_would_no_mark() {
     let mut e = Engine::new();
     e.set_english_auto_restore(true); // Enable experimental feature
-    e.set_skip_w_shortcut(true); // Disable W → Ư at word start
-                                 // "ou" pattern doesn't exist in Vietnamese
+                                      // "ou" pattern doesn't exist in Vietnamese
     let result = type_word(&mut e, "woulds");
     assert_eq!(result, "woulds", "woulds should stay unchanged");
 }

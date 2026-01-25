@@ -435,9 +435,6 @@ fn dynamic_regression() {
         cases.len(),
         errors.len()
     );
-    for e in &errors {
-        println!("  FAIL: {}", e);
-    }
     assert!(
         errors.is_empty(),
         "{} regression tests failed",
