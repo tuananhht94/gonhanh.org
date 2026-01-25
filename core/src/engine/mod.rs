@@ -6158,6 +6158,17 @@ impl Engine {
                         continue;
                     }
 
+                    // EXCEPTION: When next_key is D and there's another D earlier,
+                    // this is Vietnamese đ (stroke) pattern with d...d
+                    // Example: "daafdm" = d + aa + f + D + m → "đầm"
+                    // The two D's form the stroke pattern for đ
+                    if next_key == keys::D {
+                        let d_count = self.raw_input.iter().filter(|(k, _, _)| *k == keys::D).count();
+                        if d_count >= 2 {
+                            continue; // Vietnamese stroke pattern
+                        }
+                    }
+
                     // Case 1a: More letters after the consonant → definitely English
                     // Example: "expect" = E+X+P+E+C+T (X followed by P, then more)
                     if i + 2 < self.raw_input.len() {
@@ -6392,6 +6403,25 @@ impl Engine {
                                 // This creates circumflex+mark on vowel (ậ, ẫ, ầ, ẩ, ặ, etc.)
                                 // BUT: "param" has same pattern but IS in English dict → restore
                                 if keys::is_consonant(char_after) {
+                                    // EXCEPTION: u + modifier + u + w is Vietnamese ưu diphthong
+                                    // Pattern: "cufuw" = c + u + f + u + w → "cừu" (c + ừu)
+                                    // The 'w' is the horn modifier converting u to ư
+                                    // This is a valid Vietnamese typing order, not English
+                                    if prev_vowel == keys::U && char_after == keys::W {
+                                        continue; // Vietnamese ưu pattern
+                                    }
+
+                                    // EXCEPTION: When char_after is D and there are 2+ D's,
+                                    // this is Vietnamese stroke pattern d...d for đ
+                                    // Pattern: "dafadm" = d + a + f + a + D + m → "đầm"
+                                    // The two D's form the stroke pattern for đ
+                                    if char_after == keys::D {
+                                        let d_count = self.raw_input.iter().filter(|(k, _, _)| *k == keys::D).count();
+                                        if d_count >= 2 {
+                                            continue; // Vietnamese stroke pattern
+                                        }
+                                    }
+
                                     // Check if this forms valid Vietnamese syllable with circumflex
                                     // Circumflex vowels (â, ê, ô) + valid finals
                                     let is_circumflex_vowel =
