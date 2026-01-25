@@ -6198,7 +6198,11 @@ impl Engine {
                     // Example: "daafdm" = d + aa + f + D + m → "đầm"
                     // The two D's form the stroke pattern for đ
                     if next_key == keys::D {
-                        let d_count = self.raw_input.iter().filter(|(k, _, _)| *k == keys::D).count();
+                        let d_count = self
+                            .raw_input
+                            .iter()
+                            .filter(|(k, _, _)| *k == keys::D)
+                            .count();
                         if d_count >= 2 {
                             continue; // Vietnamese stroke pattern
                         }
@@ -6451,7 +6455,11 @@ impl Engine {
                                     // Pattern: "dafadm" = d + a + f + a + D + m → "đầm"
                                     // The two D's form the stroke pattern for đ
                                     if char_after == keys::D {
-                                        let d_count = self.raw_input.iter().filter(|(k, _, _)| *k == keys::D).count();
+                                        let d_count = self
+                                            .raw_input
+                                            .iter()
+                                            .filter(|(k, _, _)| *k == keys::D)
+                                            .count();
                                         if d_count >= 2 {
                                             continue; // Vietnamese stroke pattern
                                         }

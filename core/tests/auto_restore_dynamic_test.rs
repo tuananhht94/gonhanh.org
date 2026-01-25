@@ -646,7 +646,7 @@ const ORE_ARE_URE_WORDS: &[(&str, &str)] = &[
     ("lore ", "lore "),
     ("mare ", "mare "),
     ("more ", "more "),
-    ("ore ", "oẻ "),  // 3-char diphthong: o+r+e → oẻ (Vietnamese)
+    ("ore ", "oẻ "), // 3-char diphthong: o+r+e → oẻ (Vietnamese)
     ("pore ", "pore "),
     ("rare ", "rare "),
     ("shore ", "shore "),
