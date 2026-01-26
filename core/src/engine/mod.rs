@@ -3210,16 +3210,22 @@ impl Engine {
                 &vowels
             };
 
+            // Issue #162 fix: Don't reposition if vowels are identical (doubled vowels like "oo")
+            // UNLESS there's a final consonant (NG/C) - then Vietnamese tone rules apply.
+            // Example: "bosoong" → "boóng" (mark moves to second O before NG final)
+            let last_vowel_pos = vowels.last().map(|v| v.pos).unwrap_or(0);
+            let has_final = self.has_final_consonant(last_vowel_pos);
+
             if effective_vowels.len() >= 2
                 && effective_vowels
                     .iter()
                     .all(|v| v.key == effective_vowels[0].key)
+                && !has_final
+            // Allow repositioning if there's a final consonant
             {
                 return None;
             }
 
-            let last_vowel_pos = vowels.last().map(|v| v.pos).unwrap_or(0);
-            let has_final = self.has_final_consonant(last_vowel_pos);
             let new_pos =
                 Phonology::find_tone_position(&vowels, has_final, self.modern_tone, has_qu, has_gi);
 
@@ -7773,6 +7779,8 @@ mod tests {
             ("dooongfd", "đoòng"),
             // Alternative typing order: stroke at end
             ("dooongfd", "đoòng"), // d + ooo + ng + f + d → đoòng (stroke at end)
+            // Typing order: mark BEFORE double-o (b + o + s + oo + ng)
+            ("bosoong", "boóng"), // b + o + s + oo + ng → boóng (mark before oo)
         ];
 
         for (input, expected) in cases {
