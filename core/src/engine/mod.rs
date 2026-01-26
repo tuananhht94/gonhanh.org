@@ -3799,6 +3799,132 @@ impl Engine {
                 return self.rebuild_from_after_insert(u_pos);
             }
 
+            // Revert mark on B-initial triple-o when invalid consonant follows
+            // "booos" → "boó", but "booost" → "boost" (revert mark when T follows)
+            // Only revert for consonants that can't form valid finals (not N for NG)
+            if self.had_circumflex_revert
+                && self.method == 0
+                && keys::is_consonant(key)
+                && key != keys::N
+            {
+                let buf_len = self.buf.len();
+                // Check for pattern: B + Oó (O with mark) at end, consonant just added
+                // Buffer: [B, O, Oó, consonant] where Oó has mark != 0
+                if buf_len >= 3 {
+                    let first_key = self.buf.get(0).map(|c| c.key).unwrap_or(0);
+                    let is_b_initial = first_key == keys::B;
+
+                    // Check if second-to-last char (before just-added consonant) is O with mark
+                    // buf_len-1 is the just-added consonant, buf_len-2 is the potential marked O
+                    let marked_o_pos = buf_len - 2;
+                    let has_marked_o = self
+                        .buf
+                        .get(marked_o_pos)
+                        .map(|c| c.key == keys::O && c.mark != 0)
+                        .unwrap_or(false);
+
+                    // Check if there's another O before the marked O (double-O pattern)
+                    let has_oo_pattern = marked_o_pos >= 1
+                        && self
+                            .buf
+                            .get(marked_o_pos - 1)
+                            .map(|c| c.key == keys::O)
+                            .unwrap_or(false);
+
+                    if is_b_initial && has_marked_o && has_oo_pattern {
+                        // Get the mark value before clearing (to determine which key to insert)
+                        let mark_val = self.buf.get(marked_o_pos).map(|c| c.mark).unwrap_or(0);
+                        let mark_key = if mark_val == 1 { keys::S } else { keys::F }; // sắc=1=s, huyền=2=f
+
+                        // Clear the mark on O
+                        if let Some(c) = self.buf.get_mut(marked_o_pos) {
+                            c.mark = 0;
+                        }
+
+                        // Insert the mark key as literal BEFORE the just-added consonant
+                        // Use pop/push since Buffer doesn't have insert
+                        // Before: [B, O, Oó, T] where Oó has mark
+                        // After:  [B, O, O, S, T] (mark cleared, S inserted)
+                        if let Some(consonant) = self.buf.pop() {
+                            self.buf.push(Char::new(mark_key, false));
+                            self.buf.push(consonant);
+                        }
+
+                        // Manual rebuild: screen has "boó" (T not yet shown)
+                        // Need to delete "ó" (1 char) and output "ost" (3 chars)
+                        // Output from marked_o_pos to end of buffer
+                        let mut output = Vec::new();
+                        for i in marked_o_pos..self.buf.len() {
+                            if let Some(c) = self.buf.get(i) {
+                                if let Some(ch) = chars::to_char(c.key, c.caps, c.tone, c.mark) {
+                                    output.push(ch);
+                                } else if let Some(ch) = crate::utils::key_to_char(c.key, c.caps) {
+                                    output.push(ch);
+                                }
+                            }
+                        }
+                        // Backspace 1 to delete "ó", output "ost"
+                        return Result::send(1, &output);
+                    }
+                }
+            }
+
+            // Detect and apply mark for triple-o word patterns (booofng → boòng)
+            // When NG final is typed after a pattern like "boo" + mark_key (f/s),
+            // retroactively apply the mark and remove the literal mark key
+            // This handles B/C/M initials that were excluded from is_vietnamese_triple_o_word
+            if key == keys::G && self.had_circumflex_revert && self.method == 0 {
+                let buf_len = self.buf.len();
+                // Check for pattern: [initial] + OO + [f/s] + N + G (just added)
+                // Buffer now has: [B, O, O, F, N, G] or [M, O, O, S, N, G]
+                if buf_len >= 5 {
+                    let first_key = self.buf.get(0).map(|c| c.key).unwrap_or(0);
+                    let is_bcm_initial = matches!(first_key, keys::B | keys::C | keys::M);
+                    let has_n_before_g = self.buf.get(buf_len - 2).map(|c| c.key) == Some(keys::N);
+
+                    if is_bcm_initial && has_n_before_g {
+                        // Find mark key (f/s) between double-O and N
+                        // Pattern: OO + mark_key + N + G
+                        let mark_pos = buf_len - 3; // Position before N
+                        if let Some(mark_char) = self.buf.get(mark_pos) {
+                            let is_mark_key = mark_char.key == keys::F || mark_char.key == keys::S;
+                            let mark_key = mark_char.key;
+
+                            // Check for double-O before mark key
+                            let has_oo_before = mark_pos >= 2
+                                && self.buf.get(mark_pos - 1).map(|c| c.key) == Some(keys::O)
+                                && self.buf.get(mark_pos - 2).map(|c| c.key) == Some(keys::O);
+
+                            if is_mark_key && has_oo_before {
+                                // Calculate mark value: f=huyền(2), s=sắc(1)
+                                let mark_val = if mark_key == keys::F { 2u8 } else { 1u8 };
+                                let o_pos = mark_pos - 1; // Last O position
+
+                                // Remove the mark key from buffer
+                                self.buf.remove(mark_pos);
+
+                                // Apply mark to the O
+                                if let Some(c) = self.buf.get_mut(o_pos) {
+                                    if c.key == keys::O {
+                                        c.mark = mark_val;
+                                        self.had_any_transform = true;
+                                    }
+                                }
+
+                                // Rebuild: screen has "boofng", buffer now has "boòng"
+                                // Need extra backspace for removed mark key
+                                let result = self.rebuild_from_after_insert(o_pos);
+                                let chars: Vec<char> = result.chars[..result.count as usize]
+                                    .iter()
+                                    .filter_map(|&c| char::from_u32(c))
+                                    .collect();
+                                return Result::send(result.backspace + 1, &chars);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Normalize ưo → ươ immediately when 'o' is typed after 'ư'
             // This ensures "dduwo" → "đươ" (Telex) and "u7o" → "ươ" (VNI)
             // Works for both methods since "ưo" alone is not valid Vietnamese
@@ -5217,11 +5343,12 @@ impl Engine {
         }
 
         // CASE 2: Partial pattern (no final yet) → only for initials without English collision
-        // Allow: CH, D, G, T, S (no common English "choos", "doos", "goos", "toos", "soos")
-        // Exclude: B, C, M (collide with English "boos", "coos", "moos")
-        // This allows "gooofng" → "goòng" while keeping "booos" → "boos"
+        // Allow: B, CH, D, G, T, S (Vietnamese triple-o patterns)
+        // B is included: "booos" → "boó" (mark applied, auto-restored if consonant follows)
+        // Exclude: C, M (collide with English "coos", "moos")
         let oo_at_end = oo_pos + 2 == len;
-        let safe_partial_initial = matches!(first_key, keys::D | keys::G | keys::T | keys::S);
+        let safe_partial_initial =
+            matches!(first_key, keys::B | keys::D | keys::G | keys::T | keys::S);
         (ch_initial_match || (safe_partial_initial && single_initial_match)) && oo_at_end
     }
 
@@ -7580,12 +7707,15 @@ mod tests {
     #[test]
     fn test_literal_after_circumflex_revert() {
         let cases: &[(&str, &str)] = &[
-            // Tone modifier after revert → literal (valid VN initials)
-            ("booos", "boos"), // booo→boo + s → boos (not boós)
+            // B-initial: mark applied when pattern ends with mark key
+            ("booos", "boó"), // booo→boo + s → boó (mark applied, ends with s)
+            // Auto-restore: consonant after mark → English word
+            ("booost", "boost"), // booo→boo + s + t → boost (auto-restore)
+            // Other patterns remain literal
             ("seeem", "seem"), // seee→see + m → seem
-            ("mooos", "moos"), // mooo→moo + s → moos (not moós)
+            ("mooos", "moos"), // mooo→moo + s → moos (M not in safe partial)
             ("beeef", "beef"), // beee→bee + f → beef (not bèef)
-            ("gooox", "goox"), // gooo→goo + x → goox (not goõ)
+            ("gooox", "goox"), // gooo→goo + x → goox (x is not valid mark)
             ("leeef", "leef"), // leee→lee + f → leef (not lèef)
             // Consonant after revert → literal
             ("boook", "book"), // booo→boo + k → book
@@ -7630,6 +7760,10 @@ mod tests {
             ("chooongf", "choòng"), // chooo + ng + f → choòng
             ("gooongf", "goòng"),   // gooo + ng + f → goòng
             ("tooongf", "toòng"),   // tooo + ng + f → toòng
+            ("booongf", "boòng"),   // booo + ng + f → boòng
+            // Vietnamese triple-o words with tone BEFORE final (typing order variant)
+            ("booofng", "boòng"), // booo + f + ng → boòng
+            ("booosng", "boóng"), // booo + s + ng → boóng
             // đoòng with stroke (dd) + triple-o
             ("ddooongf", "đoòng"), // dd + ooo + ng + f → đoòng
             ("dooongdf", "đoòng"),

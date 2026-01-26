@@ -1,6 +1,6 @@
 # English 100k Typing Variants Failures
 # Format: WORD \t VARIANT \t EXPECTED \t ACTUAL \t BUFFER
-# Total failures: 490
+# Total failures: 491
 
 been	been	been	bên	bên
 see	see	see	sê	sê
@@ -327,6 +327,7 @@ dees	dees	dees	dế	dês
 aws	aws	aws	ắ	ăs
 boxwood	boxwood	boxwood	bõod	boxwôd
 hopwood	hopwood	hopwood	hopod	hopwôd
+boos	booos	boos	boó	bôos
 boos	boos	boos	bố	bôs
 tdd	tdd	tdd	tđ	tđ
 maar	maar	maar	mẩ	mâr
