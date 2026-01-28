@@ -4228,10 +4228,16 @@ impl Engine {
     /// Clear everything including word history
     /// Used when cursor position changes (mouse click, arrow keys, etc.)
     /// to prevent accidental restore from stale history
+    /// Issue #274: Also reset auto-capitalize state to prevent incorrect
+    /// capitalization after paste/cursor change
     pub fn clear_all(&mut self) {
         self.clear();
         self.word_history.clear();
         self.spaces_after_commit = 0;
+        // Issue #274: Reset auto-capitalize state on cursor change
+        // This prevents incorrect capitalization after copy-paste
+        self.pending_capitalize = false;
+        self.saw_sentence_ending = false;
     }
 
     /// Get the full composed buffer as a Vietnamese string with diacritics.
