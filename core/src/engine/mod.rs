@@ -563,12 +563,10 @@ impl Engine {
         shift: bool,
         ch: Option<char>,
     ) -> Result {
-        // If no character provided, fall back to normal processing
-        if ch.is_none() {
+        // No character provided → fall back to normal processing
+        let Some(ch) = ch else {
             return self.on_key_ext(key, caps, ctrl, shift);
-        }
-
-        let ch = ch.unwrap();
+        };
 
         // Ctrl/Cmd bypasses everything
         if ctrl {
@@ -578,17 +576,19 @@ impl Engine {
             return Result::none();
         }
 
-        // Accumulate the character in shortcut_prefix
+        // Accumulate character, cap at 32 chars to prevent unbounded growth
         self.shortcut_prefix.push(ch);
+        if self.shortcut_prefix.len() > 32 {
+            let trim = self.shortcut_prefix.len() - 32;
+            self.shortcut_prefix.drain(..trim);
+        }
 
-        // Check for immediate shortcut match - try all suffixes (longest first)
-        // This allows ≈ç√√ to match √√ even with preceding characters
+        // Try suffix matches (longest first) using char_indices to avoid allocations
         let input_method = self.current_input_method();
-        let prefix_chars: Vec<char> = self.shortcut_prefix.chars().collect();
-        for start in 0..prefix_chars.len() {
-            let suffix: String = prefix_chars[start..].iter().collect();
+        for (idx, _) in self.shortcut_prefix.char_indices() {
+            let suffix = &self.shortcut_prefix[idx..];
             if let Some(m) = self.shortcuts.try_match_for_method(
-                &suffix,
+                suffix,
                 None,
                 false, // immediate, not word boundary
                 input_method,
