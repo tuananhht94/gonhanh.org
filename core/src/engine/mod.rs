@@ -929,7 +929,7 @@ impl Engine {
             // AND the modifier key from raw_input. Example: "per" → buf=["p","ẻ"], raw=[(P),(E),(R)]
             // When backspace removes "ẻ", we must pop both R (modifier) and E (base) from raw_input.
             // Check if char being deleted has a mark before popping.
-            let char_has_mark = self.buf.last().map_or(false, |c| c.mark != 0);
+            let char_has_mark = self.buf.last().is_some_and(|c| c.mark != 0);
 
             self.buf.pop();
             self.raw_input.pop();
@@ -4116,9 +4116,15 @@ impl Engine {
                             let backspace = (self.buf.len() - 1) as u8;
 
                             // Repopulate buffer with restored content (plain chars, no marks)
+                            // IMPORTANT: Use raw_chars (collapsed output) not raw_input
+                            // This ensures buffer length matches screen after restore
+                            // Example: "ook" -> raw_input=[o,o,k] but raw_chars=[o,k] after collapse
                             self.buf.clear();
-                            for &(key, caps, _) in &self.raw_input {
-                                self.buf.push(Char::new(key, caps));
+                            for ch in &raw_chars {
+                                let key = utils::char_to_key(*ch);
+                                if key != 255 {
+                                    self.buf.push(Char::new(key, ch.is_uppercase()));
+                                }
                             }
 
                             self.last_transform = None;
