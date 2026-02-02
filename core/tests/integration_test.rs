@@ -3721,6 +3721,16 @@ fn test_user_backspace_retype_auto_restore() {
     assert_eq!(result, "user ", "us<user should auto-restore to user");
 }
 
+// Test case: user<ser → uẻ but expected user
+// Type "user", backspace deletes 'r', then type "ser" to complete "user"
+#[test]
+fn test_user_backspace_ser_auto_restore() {
+    let mut e = Engine::new();
+    e.set_english_auto_restore(true);
+    let result = type_word(&mut e, "user<ser ");
+    assert_eq!(result, "user ", "user<ser should auto-restore to user");
+}
+
 // Test case: per<erfec → peerfec but expected perfec (no space, mid-word)
 // The < represents backspace, so: per + backspace + erfec
 // After "per" → "pẻ", backspace removes "ẻ", then typing "erfec"
