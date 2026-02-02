@@ -924,8 +924,63 @@ impl Engine {
             if self.buf.is_empty() {
                 self.has_non_letter_prefix = true;
             }
+
+            // Issue: When deleting a char with mark/tone, we need to pop both the base char
+            // AND the modifier key from raw_input. Example: "per" → buf=["p","ẻ"], raw=[(P),(E),(R)]
+            // When backspace removes "ẻ", we must pop both R (modifier) and E (base) from raw_input.
+            // Check if char being deleted has a mark before popping.
+            let char_has_mark = self.buf.last().is_some_and(|c| c.mark != 0);
+            // Also check for circumflex tone (from double vowel or delayed circumflex pattern)
+            let char_has_circumflex = self.buf.last().is_some_and(|c| c.tone == tone::CIRCUMFLEX);
+
             self.buf.pop();
             self.raw_input.pop();
+
+            // If char had a mark, pop the modifier's base vowel too
+            // This ensures raw_input stays in sync with buffer
+            if char_has_mark && !self.raw_input.is_empty() {
+                self.raw_input.pop();
+            }
+
+            // Issue: When Vietnamese mark is repositioned (e.g., "us" → "ú", then "use" → "ue" + mark on e),
+            // the deleted char absorbed the mark from previous char. After backspace, if remaining
+            // buffer char has NO mark but raw_input has mark keys (s/f/r/x/j) for it, those are stale.
+            // Example: "user" → buf=[u,ẻ] with mark moved from u to e, raw=[u,s,e,r]
+            // After backspace: buf=[u mark=0], raw=[u,s] - but 's' is stale!
+            // Fix: if remaining char has no mark but raw_input's last entry is a mark key, pop it.
+            if !self.buf.is_empty() && !self.raw_input.is_empty() {
+                let remaining_has_no_mark = self.buf.last().is_some_and(|c| c.mark == 0);
+                if remaining_has_no_mark && self.raw_input.len() >= 2 {
+                    let (last_key, _, _) = self.raw_input[self.raw_input.len() - 1];
+                    let mark_keys = [keys::S, keys::F, keys::R, keys::X, keys::J];
+                    if mark_keys.contains(&last_key) {
+                        // Stale mark key - pop it
+                        self.raw_input.pop();
+                    }
+                }
+            }
+
+            // Issue: When char with circumflex is deleted, the stale vowel key that triggered
+            // circumflex may still be in raw_input. This happens with delayed circumflex (ata→ât).
+            // Example: "data" → buf=[d,â,t], raw=[d,a,t,a]. After <<: buf=[d], raw=[d,a] - 'a' is stale!
+            // Fix: if deleted char had circumflex AND remaining char has no tone, pop the vowel.
+            if char_has_circumflex && !self.buf.is_empty() && !self.raw_input.is_empty() {
+                let remaining_has_no_tone = self.buf.last().is_some_and(|c| c.tone == 0);
+                if remaining_has_no_tone && self.raw_input.len() >= 2 {
+                    let (last_key, _, _) = self.raw_input[self.raw_input.len() - 1];
+                    // Circumflex vowels are a, e, o
+                    if matches!(last_key, keys::A | keys::E | keys::O) {
+                        // Stale vowel from circumflex pattern - pop it
+                        self.raw_input.pop();
+                    }
+                }
+            }
+
+            // When buffer becomes empty after pop, clear raw_input completely
+            // This handles edge cases where modifiers may still be left over
+            if self.buf.is_empty() {
+                self.raw_input.clear();
+            }
             self.last_transform = None;
             // Reset stroke_reverted on backspace so user can re-trigger stroke
             // e.g., "ddddd" → "dddd", then backspace×3 → "d", then "d" → "đ"
@@ -4088,8 +4143,11 @@ impl Engine {
                 && self.buf.len() >= 2
             {
                 // Check if consonant immediately follows a marked character
+                // Only check for mark (sắc, huyền, etc.), NOT tone (circumflex, horn, breve)
+                // Circumflex from double vowel (oo→ô) should NOT trigger restore
+                // Example: "ôk" from "ook" should stay as "ôk", not revert to "ok"
                 if let Some(prev_char) = self.buf.get(self.buf.len() - 2) {
-                    let prev_has_mark = prev_char.mark > 0 || prev_char.tone > 0;
+                    let prev_has_mark = prev_char.mark > 0;
 
                     if prev_has_mark && self.has_english_modifier_pattern(false) {
                         // Clear English pattern detected - restore to raw
@@ -4097,9 +4155,15 @@ impl Engine {
                             let backspace = (self.buf.len() - 1) as u8;
 
                             // Repopulate buffer with restored content (plain chars, no marks)
+                            // IMPORTANT: Use raw_chars (collapsed output) not raw_input
+                            // This ensures buffer length matches screen after restore
+                            // Example: "ook" -> raw_input=[o,o,k] but raw_chars=[o,k] after collapse
                             self.buf.clear();
-                            for &(key, caps, _) in &self.raw_input {
-                                self.buf.push(Char::new(key, caps));
+                            for ch in &raw_chars {
+                                let key = utils::char_to_key(*ch);
+                                if key != 255 {
+                                    self.buf.push(Char::new(key, ch.is_uppercase()));
+                                }
                             }
 
                             self.last_transform = None;
@@ -4833,6 +4897,29 @@ impl Engine {
                     return None;
                 }
             }
+        }
+
+        // CIRCUMFLEX FROM DOUBLE VOWEL CHECK: Preserve circumflex from intentional double vowel
+        // "ook" → "ôk", "eecu" → "êcu" - user typed double vowel to get circumflex
+        // Skip restore when:
+        // 1. Buffer has circumflex (ô, â, ê) that was NOT reverted
+        // 2. Buffer does NOT have any mark (sắc, huyền, hỏi, ngã, nặng)
+        // 3. Raw input has corresponding double vowel pattern (oo, aa, ee)
+        // This preserves intentional circumflex typing
+        let has_circumflex_in_buffer = self.buf.iter().any(|c| c.tone == tone::CIRCUMFLEX);
+        let has_mark_in_buffer = self.buf.iter().any(|c| c.mark > 0);
+        let has_raw_double_vowel = self.raw_input.windows(2).any(|pair| {
+            let (k1, _, _) = pair[0];
+            let (k2, _, _) = pair[1];
+            k1 == k2 && matches!(k1, keys::O | keys::A | keys::E)
+        });
+        if has_circumflex_in_buffer
+            && !has_mark_in_buffer
+            && has_raw_double_vowel
+            && !self.had_circumflex_revert
+        {
+            // Keep buffer - circumflex from intentional double vowel input
+            return None;
         }
 
         // UNIFIED: Restore only when buffer is invalid Vietnamese AND raw_input is valid English
@@ -5751,6 +5838,39 @@ impl Engine {
                         continue; // Check again at same position for triple+
                     }
                     i += 1;
+                }
+            }
+
+            // 4. Dictionary-based double vowel collapse for ALL vowels (including u, i)
+            // This handles cases where double vowel comes from backspace + retype, not circumflex
+            // Example: "sur<upervisor" → "su" + "upervisor" = "suupervisor" → "supervisor"
+            // Only collapse when:
+            //   - Current form is NOT in dictionary, AND
+            //   - Collapsed form IS in dictionary
+            //   - Double vowel is NOT at the very end (preserve "free", "agree", "aree")
+            //   - NOT a SaaS pattern (same consonant at start and end)
+            // This section does NOT require had_circumflex_revert flag
+            if chars.len() >= 3 && !is_saas_pattern {
+                let current_str: String = chars.iter().collect::<String>().trim().to_lowercase();
+                if !english_dict::is_english_word(&current_str) {
+                    let mut i = 0;
+                    // Skip double vowels at the very end (i + 1 == chars.len() - 1)
+                    while i + 2 < chars.len() {
+                        let c = chars[i].to_ascii_lowercase();
+                        let next = chars[i + 1].to_ascii_lowercase();
+                        // Check for double vowel (all vowels: a, e, i, o, u)
+                        if matches!(c, 'a' | 'e' | 'i' | 'o' | 'u') && c == next {
+                            let mut collapsed = chars.clone();
+                            collapsed.remove(i);
+                            let collapsed_str: String =
+                                collapsed.iter().collect::<String>().trim().to_lowercase();
+                            if english_dict::is_english_word(&collapsed_str) {
+                                chars = collapsed;
+                                continue; // re-check same position
+                            }
+                        }
+                        i += 1;
+                    }
                 }
             }
 
