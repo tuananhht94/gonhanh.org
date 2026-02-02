@@ -14,6 +14,7 @@ Mỗi đóng góp, dù lớn hay nhỏ, đều giúp người Việt gõ tiếng
 
 Những người đã tin tưởng và ủng hộ dự án.
 
+
 ### 🥇 Gold
 
 <table>
@@ -82,6 +83,7 @@ Những người đã tin tưởng và ủng hộ dự án.
     </td>
   </tr>
 </table>
+
 
 <p align="center">
   <a href="https://github.com/sponsors/khaphanspace">
@@ -855,12 +857,12 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
 
 ### Bạn muốn đóng góp?
 
-<a href="https://github.com/sponsors/khaphanspace">💖 Sponsor</a> ·
 <a href="/CONTRIBUTING.md">📖 Hướng dẫn đóng góp</a> ·
-<a href="https://github.com/khaphanspace/gonhanh.org/issues">🐛 Báo lỗi</a>
+<a href="https://github.com/khaphanspace/gonhanh.org/issues">🐛 Báo lỗi</a> ·
+<a href="https://github.com/sponsors/khaphanspace">💖 Sponsor</a>
 
 ---
 
-_Được cập nhật tự động · Lần cuối: 02/02/2026_
+*Được cập nhật tự động · Lần cuối: 02/02/2026*
 
 </div>
