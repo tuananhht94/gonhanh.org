@@ -3746,6 +3746,16 @@ fn test_perfec_backspace_retype_auto_restore() {
     );
 }
 
+// Test case: data<<ata (delayed circumflex pattern with double backspace)
+// "data" → "dât", then << deletes "ât", then "ata" should restore to "data"
+#[test]
+fn test_data_double_backspace_ata_auto_restore() {
+    let mut e = Engine::new();
+    e.set_english_auto_restore(true);
+    let result = type_word(&mut e, "data<<ata ");
+    assert_eq!(result, "data ", "data<<ata should auto-restore to data");
+}
+
 // Test case: abc + space + ook + space
 // Fixed: "abc ôk " (circumflex from intentional double vowel is preserved)
 #[test]

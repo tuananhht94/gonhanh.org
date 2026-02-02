@@ -930,6 +930,8 @@ impl Engine {
             // When backspace removes "ẻ", we must pop both R (modifier) and E (base) from raw_input.
             // Check if char being deleted has a mark before popping.
             let char_has_mark = self.buf.last().is_some_and(|c| c.mark != 0);
+            // Also check for circumflex tone (from double vowel or delayed circumflex pattern)
+            let char_has_circumflex = self.buf.last().is_some_and(|c| c.tone == tone::CIRCUMFLEX);
 
             self.buf.pop();
             self.raw_input.pop();
@@ -945,14 +947,30 @@ impl Engine {
             // buffer char has NO mark but raw_input has mark keys (s/f/r/x/j) for it, those are stale.
             // Example: "user" → buf=[u,ẻ] with mark moved from u to e, raw=[u,s,e,r]
             // After backspace: buf=[u mark=0], raw=[u,s] - but 's' is stale!
-            // Fix: if remaining char has no mark but raw_input's second entry is a mark key, pop it.
+            // Fix: if remaining char has no mark but raw_input's last entry is a mark key, pop it.
             if !self.buf.is_empty() && !self.raw_input.is_empty() {
                 let remaining_has_no_mark = self.buf.last().is_some_and(|c| c.mark == 0);
                 if remaining_has_no_mark && self.raw_input.len() >= 2 {
-                    let (second_key, _, _) = self.raw_input[self.raw_input.len() - 1];
+                    let (last_key, _, _) = self.raw_input[self.raw_input.len() - 1];
                     let mark_keys = [keys::S, keys::F, keys::R, keys::X, keys::J];
-                    if mark_keys.contains(&second_key) {
+                    if mark_keys.contains(&last_key) {
                         // Stale mark key - pop it
+                        self.raw_input.pop();
+                    }
+                }
+            }
+
+            // Issue: When char with circumflex is deleted, the stale vowel key that triggered
+            // circumflex may still be in raw_input. This happens with delayed circumflex (ata→ât).
+            // Example: "data" → buf=[d,â,t], raw=[d,a,t,a]. After <<: buf=[d], raw=[d,a] - 'a' is stale!
+            // Fix: if deleted char had circumflex AND remaining char has no tone, pop the vowel.
+            if char_has_circumflex && !self.buf.is_empty() && !self.raw_input.is_empty() {
+                let remaining_has_no_tone = self.buf.last().is_some_and(|c| c.tone == 0);
+                if remaining_has_no_tone && self.raw_input.len() >= 2 {
+                    let (last_key, _, _) = self.raw_input[self.raw_input.len() - 1];
+                    // Circumflex vowels are a, e, o
+                    if matches!(last_key, keys::A | keys::E | keys::O) {
+                        // Stale vowel from circumflex pattern - pop it
                         self.raw_input.pop();
                     }
                 }
