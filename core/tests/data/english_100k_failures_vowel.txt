@@ -1,7 +1,7 @@
 # English 100k Failures - Vowel Patterns
 # Cause: aa/ee/oo/aw/ow/uw/dd trigger vowel transforms
 # Format: WORD \t ACTUAL \t BUFFER
-# Total: 216 (+ 95 both)
+# Total: 217 (+ 95 both)
 #
 # WORD: English word typed
 # ACTUAL: engine output after space
@@ -108,6 +108,7 @@ dowd	đơ	đơ
 roo	rô	rô
 aad	âd	âd
 dde	đe	đe
+swoon	suôn	suôn
 maa	mâ	mâ
 paa	pâ	pâ
 nowak	nơak	nơak

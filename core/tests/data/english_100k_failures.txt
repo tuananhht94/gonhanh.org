@@ -1,6 +1,6 @@
 # English 100k Typing Variants Failures
 # Format: WORD \t VARIANT \t EXPECTED \t ACTUAL \t BUFFER
-# Total failures: 392
+# Total failures: 393
 
 been	been	been	bên	bên
 see	see	see	sê	sê
@@ -171,6 +171,7 @@ aad	aad	aad	âd	âd
 dde	dde	dde	đe	đe
 kowloon	kowwloon	kowloon	kowwloon	kơwlôn
 kowalski	kowwalski	kowalski	kowwalski	kơwalski
+swoon	swoon	swoon	suôn	swôn
 maa	maa	maa	mâ	mâ
 paa	paa	paa	pâ	pâ
 nowak	nowak	nowak	nơak	nơak

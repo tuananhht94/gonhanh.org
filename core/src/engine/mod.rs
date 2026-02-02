@@ -4882,14 +4882,12 @@ impl Engine {
         }
 
         // CIRCUMFLEX FROM DOUBLE VOWEL CHECK: Preserve circumflex from intentional double vowel
-        // "ook" → "ôk" - user typed "oo" to get circumflex, should NOT restore to "ok"
+        // "ook" → "ôk", "eecu" → "êcu" - user typed double vowel to get circumflex
         // Skip restore when:
         // 1. Buffer has circumflex (ô, â, ê) that was NOT reverted
         // 2. Buffer does NOT have any mark (sắc, huyền, hỏi, ngã, nặng)
         // 3. Raw input has corresponding double vowel pattern (oo, aa, ee)
-        // 4. Buffer is very short (2 chars or less) - likely intentional circumflex
-        // This preserves intentional circumflex for short words like "ôk" from "ook"
-        // while still allowing restore for longer words like "teep" → "teep"
+        // This preserves intentional circumflex typing
         let has_circumflex_in_buffer = self.buf.iter().any(|c| c.tone == tone::CIRCUMFLEX);
         let has_mark_in_buffer = self.buf.iter().any(|c| c.mark > 0);
         let has_raw_double_vowel = self.raw_input.windows(2).any(|pair| {
@@ -4897,14 +4895,12 @@ impl Engine {
             let (k2, _, _) = pair[1];
             k1 == k2 && matches!(k1, keys::O | keys::A | keys::E)
         });
-        let is_very_short = self.buf.len() <= 2;
         if has_circumflex_in_buffer
             && !has_mark_in_buffer
             && has_raw_double_vowel
             && !self.had_circumflex_revert
-            && is_very_short
         {
-            // Keep buffer - circumflex from intentional double vowel input (short word)
+            // Keep buffer - circumflex from intentional double vowel input
             return None;
         }
 
