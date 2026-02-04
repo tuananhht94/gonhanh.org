@@ -1898,7 +1898,7 @@ fn bug_would_backspace_count() {
     assert_eq!(r.backspace, 0, "w+o: no backspace (appending ơ)");
 
     // u → passthrough
-    let r = e.on_key(keys::U, false, false);
+    let _r = e.on_key(keys::U, false, false);
     // u might pass through or transform - just verify no crash
 
     // l → triggers foreign word revert
