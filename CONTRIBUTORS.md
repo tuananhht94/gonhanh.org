@@ -109,7 +109,7 @@ Những người đã đóng góp code, biến ý tưởng thành hiện thực.
       <a href="https://github.com/tuananhht94">
         <img src="https://avatars.githubusercontent.com/u/4498336?v=4" width="80" style="border-radius:50%"/><br/>
         <b>tuananhht94</b>
-      </a><br/><sub>52 commits</sub>
+      </a><br/><sub>53 commits</sub>
     </td>
     <td align="center">
       <a href="https://github.com/brotherbui">
@@ -203,6 +203,12 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
       </a>
     </td>
     <td align="center">
+      <a href="https://github.com/bs90">
+        <img src="https://avatars.githubusercontent.com/u/2457657?v=4" width="50" style="border-radius:50%"/><br/>
+        <b>bs90</b>
+      </a>
+    </td>
+    <td align="center">
       <a href="https://github.com/ntuvu">
         <img src="https://avatars.githubusercontent.com/u/107499074?v=4" width="50" style="border-radius:50%"/><br/>
         <b>ntuvu</b>
@@ -214,18 +220,12 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
         <b>vincent-south</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/jackblk">
         <img src="https://avatars.githubusercontent.com/u/12843654?v=4" width="50" style="border-radius:50%"/><br/>
         <b>jackblk</b>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/bs90">
-        <img src="https://avatars.githubusercontent.com/u/2457657?v=4" width="50" style="border-radius:50%"/><br/>
-        <b>bs90</b>
       </a>
     </td>
     <td align="center">
