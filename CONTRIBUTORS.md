@@ -779,25 +779,19 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/Cr4ckPwd">
-        <img src="https://avatars.githubusercontent.com/u/84202581?v=4" width="50" style="border-radius:50%"/><br/>
-        <b>Cr4ckPwd</b>
-      </a>
-    </td>
-    <td align="center">
       <a href="https://github.com/leolionart">
         <img src="https://avatars.githubusercontent.com/u/15364372?v=4" width="50" style="border-radius:50%"/><br/>
         <b>leolionart</b>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/tuanpmt">
         <img src="https://avatars.githubusercontent.com/u/1904924?v=4" width="50" style="border-radius:50%"/><br/>
         <b>tuanpmt</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/harrytranft">
         <img src="https://avatars.githubusercontent.com/u/33178235?v=4" width="50" style="border-radius:50%"/><br/>
@@ -828,14 +822,14 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
         <b>tam-hopee</b>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/thanhdongnguyen">
         <img src="https://avatars.githubusercontent.com/u/26676562?v=4" width="50" style="border-radius:50%"/><br/>
         <b>thanhdongnguyen</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/lordthien">
         <img src="https://avatars.githubusercontent.com/u/71846803?v=4" width="50" style="border-radius:50%"/><br/>
@@ -866,14 +860,14 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
         <b>huyz</b>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/tungdtfgw">
         <img src="https://avatars.githubusercontent.com/u/233228717?u=1070e5bae72086e9036c2e4c128e500665df0167&v=4" width="50" style="border-radius:50%"/><br/>
         <b>tungdtfgw</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/Pikazai">
         <img src="https://avatars.githubusercontent.com/u/83411198?v=4" width="50" style="border-radius:50%"/><br/>
