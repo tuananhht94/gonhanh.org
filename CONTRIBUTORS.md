@@ -285,19 +285,25 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
       </a>
     </td>
     <td align="center">
+      <a href="https://github.com/kimnh-0823">
+        <img src="https://avatars.githubusercontent.com/u/49636247?v=4" width="50" style="border-radius:50%"/><br/>
+        <b>kimnh-0823</b>
+      </a>
+    </td>
+    <td align="center">
       <a href="https://github.com/PhamNho">
         <img src="https://avatars.githubusercontent.com/u/43175878?v=4" width="50" style="border-radius:50%"/><br/>
         <b>PhamNho</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/tinyc0der">
         <img src="https://avatars.githubusercontent.com/u/19898639?v=4" width="50" style="border-radius:50%"/><br/>
         <b>tinyc0der</b>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/vananh2801">
         <img src="https://avatars.githubusercontent.com/u/124384272?v=4" width="50" style="border-radius:50%"/><br/>
@@ -328,14 +334,14 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
         <b>hieudtr8</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/dotuan199">
         <img src="https://avatars.githubusercontent.com/u/166003177?v=4" width="50" style="border-radius:50%"/><br/>
         <b>dotuan199</b>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/lamngockhuong">
         <img src="https://avatars.githubusercontent.com/u/16838267?v=4" width="50" style="border-radius:50%"/><br/>
@@ -366,18 +372,12 @@ Những người đã báo lỗi, góp ý, và thảo luận giúp định hình
         <b>dulieucuatao-tech</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://github.com/baokhanhnguyen">
         <img src="https://avatars.githubusercontent.com/u/206916589?v=4" width="50" style="border-radius:50%"/><br/>
         <b>baokhanhnguyen</b>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/kimnh-0823">
-        <img src="https://avatars.githubusercontent.com/u/49636247?v=4" width="50" style="border-radius:50%"/><br/>
-        <b>kimnh-0823</b>
       </a>
     </td>
     <td align="center">
