@@ -281,7 +281,15 @@ jobs:
           if [ -z "$NOTES" ]; then
             NOTES=$(git log --oneline -10 --pretty=format:"• %s" 2>/dev/null)
           fi
-          NOTES_HTML=$(echo "$NOTES" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' | sed 's/$/<br\/>/' | tr -d '\n')
+          # Convert markdown to simple HTML for Sparkle release notes
+          NOTES_HTML=$(echo "$NOTES" | sed \
+            -e 's/&/\&amp;/g' \
+            -e 's/^## \(.*\)/<h2>\1<\/h2>/' \
+            -e 's/^### \(.*\)/<h3>\1<\/h3>/' \
+            -e 's/^\*\*\(.*\)\*\*/<p><strong>\1<\/strong><\/p>/' \
+            -e 's/^- \(.*\)/<li>\1<\/li>/' \
+            -e '/^$/d' \
+          | tr '\n' ' ')
 
           # Generate appcast.xml
           cat > build/appcast.xml << APPCAST_EOF

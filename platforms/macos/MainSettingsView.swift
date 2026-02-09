@@ -726,9 +726,9 @@ struct UpdateBadgeView: View {
         }
         .onTapGesture {
             if updateManager.updateAvailable {
-                updateManager.checkForUpdates()  // Sparkle Install & Relaunch dialog
+                updateManager.checkForUpdates()
             } else if !updateManager.isChecking {
-                updateManager.checkInBackground() // Silent check, update badge
+                updateManager.checkAndShowIfAvailable()
             }
         }
     }

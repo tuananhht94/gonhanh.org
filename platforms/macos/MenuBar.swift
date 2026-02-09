@@ -189,7 +189,7 @@ class MenuBarController: NSObject, NSWindowDelegate {
         if UpdateManager.shared.updateAvailable {
             UpdateManager.shared.checkForUpdates()  // Show install dialog
         } else {
-            UpdateManager.shared.checkInBackground() // Silent check, badge only
+            UpdateManager.shared.checkAndShowIfAvailable()
         }
     }
 
