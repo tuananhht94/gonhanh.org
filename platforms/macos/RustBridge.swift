@@ -1169,7 +1169,7 @@ private func keyboardCallback(
         ]
 
         if textModifyingKeys.contains(keyCode) {
-            RustBridge.clearBuffer()
+            RustBridge.clearBufferAll()
         }
         // Pass through all Cmd shortcuts
         return Unmanaged.passUnretained(event)
