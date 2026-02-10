@@ -132,11 +132,10 @@ jobs:
           MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
           PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
           NEXT_PATCH=$((PATCH + 1))
-          SHORT_SHA="${GITHUB_SHA:0:7}"
           BUILD_NUM="${GITHUB_RUN_NUMBER}"
-          VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-pre.${BUILD_NUM}.${SHORT_SHA}"
+          VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-pre.${BUILD_NUM}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Pre-release version: $VERSION (base: $LATEST_TAG, build #${BUILD_NUM})"
+          echo "Pre-release version: $VERSION (base: $LATEST_TAG)"
 
       - name: Set version in app
         run: |
@@ -356,11 +355,10 @@ jobs:
           MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
           PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
           NEXT_PATCH=$((PATCH + 1))
-          SHORT_SHA="${GITHUB_SHA:0:7}"
           BUILD_NUM="${GITHUB_RUN_NUMBER}"
-          VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-pre.${BUILD_NUM}.${SHORT_SHA}"
+          VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-pre.${BUILD_NUM}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Pre-release version: $VERSION (base: $LATEST_TAG, build #${BUILD_NUM})"
+          echo "Pre-release version: $VERSION (base: $LATEST_TAG)"
 
       - name: Package
         run: |
