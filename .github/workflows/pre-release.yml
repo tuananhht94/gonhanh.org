@@ -228,29 +228,32 @@ jobs:
           fi
 
           # Generate release notes from recent commits
-          NOTES=$(git log --oneline -10 --pretty=format:"• %s" 2>/dev/null)
+          NOTES=$(git log --oneline -10 --pretty=format:"- %s" 2>/dev/null)
           # Generate release notes HTML file for Sparkle
           NOTES_HTML=$(echo "$NOTES" | sed \
             -e 's/&/\&amp;/g' \
-            -e 's/^• \(.*\)/<li>\1<\/li>/' \
+            -e 's/^## \(.*\)/<h2>\1<\/h2>/' \
+            -e 's/^### \(.*\)/<h3>\1<\/h3>/' \
+            -e 's/^\*\*\(.*\)\*\*/<p><strong>\1<\/strong><\/p>/' \
+            -e 's/^- \(.*\)/<li>\1<\/li>/' \
             -e '/^$/d')
           cat > build/release-notes.html << NOTES_EOF
           <html><body style="font-family:-apple-system,system-ui,sans-serif;font-size:13px;padding:8px">
-          <h3>Recent Changes</h3>
+          <h3>Recent Changes (Pre-release)</h3>
           ${NOTES_HTML}
           </body></html>
           NOTES_EOF
           sed -i '' 's/^          //' build/release-notes.html
 
-          # Generate appcast.xml (beta channel)
+          # Generate appcast.xml (same structure as release for full update flow testing)
           REPO="${{ github.repository }}"
           PUB_DATE=$(date -R)
           NOTES_URL="https://github.com/${REPO}/releases/download/${TAG_NAME}/release-notes.html"
           cat > build/appcast.xml << APPCAST_EOF
           <?xml version="1.0" encoding="utf-8"?>
-          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
             <channel>
-              <title>GoNhanh Beta</title>
+              <title>GoNhanh</title>
               <link>https://github.com/${REPO}</link>
               <item>
                 <title>Version ${V}</title>
@@ -265,7 +268,7 @@ jobs:
           APPCAST_EOF
           sed -i '' 's/^          //' build/appcast.xml
 
-          echo "Generated beta appcast.xml for v${V}"
+          echo "Generated appcast.xml for v${V}"
           cat build/appcast.xml
 
       - name: Create GitHub Pre-release
@@ -279,11 +282,11 @@ jobs:
           TAG_NAME="v${V}"
           DMG_FILE=$(ls build/*.dmg | head -1)
 
-          # Create tag and pre-release
+          # Create release (marked latest so SUFeedURL /releases/latest/download/ works)
           gh release create "$TAG_NAME" \
             --title "GoNhanh $V (Pre-release)" \
             --notes "Pre-release build for testing Sparkle updates." \
-            --prerelease \
+            --latest \
             "$DMG_FILE" \
             build/appcast.xml \
             build/release-notes.html
