@@ -725,7 +725,11 @@ struct UpdateBadgeView: View {
             if h { NSCursor.pointingHand.push() } else { NSCursor.pop() }
         }
         .onTapGesture {
-            updateManager.checkForUpdates()
+            if updateManager.updateAvailable {
+                updateManager.checkForUpdates()
+            } else {
+                updateManager.checkAndShowIfAvailable()
+            }
         }
     }
 }
